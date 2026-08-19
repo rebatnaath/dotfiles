@@ -280,7 +280,7 @@ PanelWindow {
                 gridAvailableHeight: menuCard.height - (cardTopPadding + profileHeaderHeight
                     + menuColumnSpacing + dividerHeight + menuColumnSpacing + cardBottomPadding
                     + wallpaperPage.headerRowHeight + wallpaperPage.searchRowHeight
-                    + wallpaperPage.grainRowHeight + 3 * wallpaperPage.pageSpacing)
+                    + 2 * wallpaperPage.pageSpacing)
                 onReloadRequested: {
                     if (!wallpaperReloadProc.running) {
                         wallpaperReloadProc.running = true

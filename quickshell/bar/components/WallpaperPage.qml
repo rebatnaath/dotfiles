@@ -12,7 +12,6 @@ Column {
 
     readonly property int headerRowHeight: 24
     readonly property int searchRowHeight: 26
-    readonly property int grainRowHeight: 26
     readonly property int pageSpacing: 10
     property int wallpaperCount: 0
     property real gridAvailableHeight: 240
@@ -150,19 +149,6 @@ Column {
                 }
             }
         }
-    }
-
-    SliderRow {
-        labelText: "E-Ink Grain"
-        minimumValue: 0
-        maximumValue: 5
-        stepSize: 1
-        valueUnit: ""
-        value: root.noiseLevel
-        valueText: root.noiseLevel === 0 ? "off" : root.noiseLevel + ""
-        showHandle: true
-        onValuePreviewed: (newValue) => root.noiseLevel = newValue
-        onValueCommitted: (newValue) => root.setNoiseLevel(newValue)
     }
 
     GridView {

@@ -2,6 +2,14 @@
 # Wall-pick: browse wallpapers with previews (quickshell) and apply via theme-switch.
 set -euo pipefail
 
+# Quickshell child processes get an almost-empty PATH (only the system
+# profile), so python3/matugen/magick wouldn't resolve and the reload would
+# fail silently. Repoint PATH at the home-manager profile that provides them.
+case ":$PATH:" in
+  *":/etc/profiles/per-user/$USER/bin:") ;;           # already present
+  *) PATH="/etc/profiles/per-user/$USER/bin:$PATH" ;;
+esac
+
 WALLS="${WALLS_DIR:-$HOME/nixConfig/assets/walls}"
 QS_CONF="$HOME/.config/quickshell/wallpaper-picker"
 QS_BIN="$(command -v quickshell 2>/dev/null || true)"
