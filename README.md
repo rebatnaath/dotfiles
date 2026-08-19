@@ -1,17 +1,17 @@
 # dotfiles
 
-This was a personal SwayFX rice for myself — since a few of you asked for the
+This was a personal SwayFX rice for myself; since a few of you asked for the
 dotfiles, I'm posting them here. I'd like to be helpful, and some of you might
 be new to this kind of thing (or not), so that's why the README is a bit
 detailed. Don't cringe on me, please.
 
-> **Important:** a few of these configurations might work, might not — there
+> **Important:** a few of these configurations might work, might not; there
 > could be bugs and what-not. It works on *my* system, but I don't know about
 > yours. It was only tested on a single-monitor 1920x1080 display; no idea about
 > anything else. If you just want to steal the bar or the quickmenu config,
 > that's totally fine. But if you're going to literally use this whole thing as
 > your system, I won't be liable if it breaks anything. If you really want
-> something fixed and don't know how, open an issue — depending on how
+> something fixed and don't know how, open an issue; depending on how
 > free/busy I am, I might patch it and let you know.
 
 ## What you get
@@ -25,13 +25,13 @@ kitty, rofi, nvim and fastfetch configs.
 
 Three bar variants, switched with `activeBar` in `quickshell/bar/settings.js`:
 
-- **Fox** — a foxes themed bottom bar.
-- **Lonely** — a single-colour accent bar (focused workspace + window title
+- **Fox**: a foxes themed bottom bar.
+- **Lonely**: a single-colour accent bar (focused workspace + window title
   share the lightest matugen tone, inactive workspaces get darkened chips).
-- **Nerv** — an Evangelion theme: the EVA backdrop plus character icons on the
+- **Nerv**: an Evangelion theme: the EVA backdrop plus character icons on the
   bar, lock and power menu.
 
-`fox` and `lonely` are just the names I gave them — no particular reason.
+`fox` and `lonely` are just the names I gave them, no particular reason.
 
 <table>
   <tr>
@@ -46,9 +46,9 @@ Three bar variants, switched with `activeBar` in `quickshell/bar/settings.js`:
 There is one shared control menu (the Quickshell quick menu) used by every bar.
 All bars open it by clicking a spot in their own layout:
 
-- **Fox** — click the `ctrls` button on the right.
-- **Lonely** — click any of the right info blocks (`[bat]`, `[vol]`, `[time]`).
-- **Nerv** — click the `MAGI SYSTEM` label on the right.
+- **Fox**: click the `ctrls` button on the right.
+- **Lonely**: click any of the right info blocks (`[bat]`, `[vol]`, `[time]`).
+- **Nerv**: click the `MAGI SYSTEM` label on the right.
 
 The menu's colours follow the bar. For **nerv** the whole control center is the
 fixed EVA red and cannot be rethemed at runtime; for **fox** and **lonely** it
@@ -64,7 +64,7 @@ the fixed EVA red):
   <tr>
     <td align="center"><img src="assets/ctrl-overview.png" width="180"><br><b>Control center</b></td>
     <td align="center"><img src="assets/ctrl-wallpaper.png" width="180"><br><b>Wallpaper picker</b></td>
-    <td align="center"><img src="assets/ctrl-tweaks.png" width="180"><br><b>Tweaks / Super+W</b></td>
+    <td align="center"><img src="assets/ctrl-tweaks.png" width="180"><br><b>Tweaks</b></td>
     <td align="center"><img src="assets/ctrl-clipboard.png" width="180"><br><b>Clipboard</b></td>
   </tr>
   <tr>
@@ -78,13 +78,13 @@ the fixed EVA red):
 ### Lockscreen & Tweaks / settings
 
 `Super+L` locks with the blurred-wallpaper Quickshell lockscreen. `Super+W`
-opens the flower/theme tweaks page (the same panel you'll see in the control
+opens the tweaks page (the same panel you'll see in the control
 menu above).
 
 <table>
   <tr>
-    <td align="center"><img src="assets/lock-screen.png" width="320"><br><b>Lockscreen — Super+L</b></td>
-    <td align="center"><img src="assets/tweaks-big.png" width="320"><br><b>Tweaks / settings — Super+W</b></td>
+    <td align="center"><img src="assets/lock-screen.png" width="320"><br><b>Lockscreen: Super+L</b></td>
+    <td align="center"><img src="assets/tweaks-big.png" width="320"><br><b>Tweaks / settings: Super+W</b></td>
   </tr>
 </table>
 
@@ -156,19 +156,19 @@ ln -sf ~/dotfiles/fastfetch ~/.config/fastfetch
 
 ## Wallpapers
 
-The wallpaper directory is **not part of this repo** — it lives in
+The wallpaper directory is **not part of this repo**; it lives in
 [nixConfig](https://github.com/rebatnaath/nixConfig)`/assets/walls`. After
 cloning/symlinking, point the scripts at your own wallpaper folder by editing
 the `WALLS` path in these two files:
 
-- `sway/scripts/wall-pick` — change the `WALLS` line to your wallpaper
+- `sway/scripts/wall-pick`: change the `WALLS` line to your wallpaper
   directory (or export a `WALLS_DIR` env var instead):
 
   ```sh
   WALLS="${WALLS_DIR:-$HOME/nixConfig/assets/walls}"
   ```
 
-- `sway/scripts/theme-switch` — update the `NERV_WALL` fallback defaults and
+- `sway/scripts/theme-switch`: update the `NERV_WALL` fallback defaults and
   the restore-image path to your own images:
 
   ```sh
