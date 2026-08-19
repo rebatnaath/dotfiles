@@ -13,7 +13,7 @@ that you can drop straight into `~/.config/`.
 | `quickshell/`| Quickshell bar, OSD, notifications, lockscreen, powermenu, picker |
 | `kitty/`     | kitty terminal config                                              |
 | `rofi/`      | rofi launcher themes/config                                        |
-| `nvim/`      | neovim config (transparent, minimal)                               |
+| `nvim/`     | neovim config                                           |
 | `fastfetch/` | fastfetch system info config                                       |
 
 ## Install
@@ -21,7 +21,7 @@ that you can drop straight into `~/.config/`.
 Clone and symlink the dirs you want into `~/.config/`:
 
 ```sh
-git clone https://github.com/USERNAME/dotfiles ~/dotfiles
+git clone https://github.com/rebatnaath/dotfiles ~/dotfiles
 ln -sf ~/dotfiles/sway ~/.config/sway
 ln -sf ~/dotfiles/quickshell ~/.config/quickshell
 ln -sf ~/dotfiles/kitty ~/.config/kitty
@@ -30,13 +30,8 @@ ln -sf ~/dotfiles/nvim ~/.config/nvim
 ln -sf ~/dotfiles/fastfetch ~/.config/fastfetch
 ```
 
-(The `.cache` files the scripts generate — quickshell picker data — are
-gitignored and recreated on demand.)
-
 ## Requirements
 
-- **SwayFX** (or sway) with the packages from `nixConfig`: `swaybg`, `matugen`,
-  `grim`, `slurp`, `cliphist`, `quickshell`, `kitty`, `rofi`, etc.
-- `quickshell` bar needs the Quickshell package.
-
-See `../nixConfig` (or the `nixConfig` repo) for the full package list.
+`.config`-managed rice for my NixOS desktop, with the full setup in
+https://github.com/rebatnaath/nixConfig. This repo holds just the configs
+themselves; the flake there installs the required packages.
