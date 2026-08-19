@@ -14,33 +14,24 @@ detailed. Don't cringe on me, please.
 > something fixed and don't know how, open an issue — depending on how
 > free/busy I am, I might patch it and let you know.
 
-Personal desktop configuration: **Sway** (SwayFX) + **Quickshell** bar, plus
-the supporting terminal/theme tooling. The companion `nixConfig` repo contains
-the NixOS setup that installs the packages; this repo holds the raw configs
-that you can drop straight into `~/.config/`.
+## What you get
 
-## Contents
+Everything here drops straight into `~/.config/` and gives you a **SwayFX**
+setup with a **Quickshell** bar (three variants), one shared control menu with
+all the pages, a lockscreen, on-screen volume/notification displays, plus
+kitty, rofi, nvim and fastfetch configs.
 
-| Dir          | What it is                                                        |
-|--------------|-------------------------------------------------------------------|
-| `sway/`      | SwayFX config, keybinds, autostart, and helper scripts            |
-| `quickshell/`| Quickshell bar, OSD, notifications, lockscreen, powermenu, picker |
-| `kitty/`     | kitty terminal config                                              |
-| `rofi/`      | rofi launcher themes/config                                        |
-| `nvim/`     | neovim config                                           |
-| `fastfetch/` | fastfetch system info config                                       |
+### Bars
 
-## Bars & themes
-
-The Quickshell bar ships with two bar types plus a separate accent theme
-(switch with `activeBar` in `quickshell/bar/settings.js`):
+Three bar variants, switched with `activeBar` in `quickshell/bar/settings.js`:
 
 - **Fox** — a foxes themed bottom bar.
 - **Lonely** — a single-colour accent bar (focused workspace + window title
   share the lightest matugen tone, inactive workspaces get darkened chips).
+- **Nerv** — an Evangelion theme: the EVA backdrop plus character icons on the
+  bar, lock and power menu.
 
-**Nerv** — a separate Evangelion theme: the EVA backdrop plus 20 character
-icons rendered on the bar, lock, and power menu.
+`fox` and `lonely` are just the names I gave them — no particular reason.
 
 <table>
   <tr>
@@ -50,10 +41,10 @@ icons rendered on the bar, lock, and power menu.
   </tr>
 </table>
 
-## Control menu
+### Control menu
 
-There is one shared control menu (the Quickshell quick menu) used by every bar
-variant. All bars open it by clicking a spot in their own layout:
+There is one shared control menu (the Quickshell quick menu) used by every bar.
+All bars open it by clicking a spot in their own layout:
 
 - **Fox** — click the `ctrls` button on the right.
 - **Lonely** — click any of the right info blocks (`[bat]`, `[vol]`, `[time]`).
@@ -84,7 +75,20 @@ the fixed EVA red):
   </tr>
 </table>
 
-The bar also drives its own on-screen displays:
+### Lockscreen & Tweaks / settings
+
+`Super+L` locks with the blurred-wallpaper Quickshell lockscreen. `Super+W`
+opens the flower/theme tweaks page (the same panel you'll see in the control
+menu above).
+
+<table>
+  <tr>
+    <td align="center"><img src="assets/lock-screen.png" width="320"><br><b>Lockscreen — Super+L</b></td>
+    <td align="center"><img src="assets/tweaks-big.png" width="320"><br><b>Tweaks / settings — Super+W</b></td>
+  </tr>
+</table>
+
+### On-screen displays
 
 <table>
   <tr>
@@ -93,8 +97,48 @@ The bar also drives its own on-screen displays:
   </tr>
 </table>
 
-You can tweak which pages appear and how things behave; the pages and hotkeys
-live in `quickshell/bar/QuickMenu.qml`.
+The bar also drives its own OSDs for volume and brightness (`XF86` media keys,
+see [Keybindings](#keybindings)). You can tweak which control-menu pages appear
+and how things behave; the pages and hotkeys live in
+`quickshell/bar/QuickMenu.qml`.
+
+## Keybindings
+
+`$mod` is `Mod4` (the Windows / Super key). The important ones:
+
+| Keybinding           | Action                                                      |
+|----------------------|-------------------------------------------------------------|
+| `$mod+Return`        | Open terminal (kitty)                                       |
+| `$mod+Shift+Return`  | Open terminal in floating mode                              |
+| `$mod+E`             | File manager (nautilus)                                     |
+| `$mod+R`             | App launcher (rofi)                                         |
+| `$mod+Q`             | Close focused window                                        |
+| `$mod+V`             | Toggle floating                                             |
+| `$mod+W`             | Wallpaper picker                                            |
+| `$mod+Shift+W`       | Theme-switch (recolour from wallpaper)                      |
+| `$mod+Shift+S`       | Region screenshot (saves + copies to clipboard)             |
+| `$mod+Shift+F10`     | Full-screen screenshot (saves + copies to clipboard)        |
+| `$mod+M`             | Power menu                                                  |
+| `$mod+n`             | Notifications                                               |
+| `$mod+Shift+v`       | Clipboard history                                           |
+| `$mod+Shift+i`       | Tweaks / settings                                           |
+| `$mod+b`             | Toggle bar visibility                                       |
+| `$mod+l`             | Lock screen                                                 |
+| `$mod+F10` / `Print` | Toggle screen recording                                     |
+| `$mod+Shift+R`       | Reload sway config                                          |
+| `$mod+Shift+X`       | Exit sway                                                   |
+| `$mod+1`…`$mod+0`    | Switch to workspace 1–10                                    |
+| `$mod+Shift+1`…`0`   | Move container to workspace 1–10                            |
+| `$mod+J`             | Toggle layout split                                         |
+| `$mod+Left/Right/Up/Down` | Move floating window                                  |
+| `$mod+S`             | Show scratchpad                                             |
+| `$mod+Shift+minus`   | Move container to scratchpad                                |
+| `$mod+ScrollUp/Down` | Previous / next workspace                                   |
+| `XF86AudioRaise/LowerVolume` | Volume up/down (with OSD)                         |
+| `XF86AudioMute`      | Mute (with OSD)                                              |
+| `XF86AudioMicMute`   | Toggle microphone mute                                      |
+| `XF86MonBrightnessUp/Down` | Brightness up/down (with OSD)                     |
+| `XF86AudioNext/Play/Pause/Prev` | Playerctl media control                       |
 
 ## Install
 
@@ -142,14 +186,14 @@ themselves; the flake there installs the required packages.
 Minimum to run this config on a distro of your own:
 
 - **SwayFX** (or sway) with XWayland
-- **Quickshell** (bar, OSD, notifications, picker)
+- **Quickshell** (bar, OSD, notifications, picker, lockscreen)
 - **kitty** terminal
 - **rofi** app launcher
 - **matugen** (wallpaper → color-scheme generation)
-- **swaybg** / **swaylock** / **swayidle**
+- **swaybg** / **swayidle**
 - **grim** + **slurp** (screenshots), **wl-clipboard** (clipboard)
 - **cliphist** (clipboard history), **wl-screenrec** (recording)
-- **brightnessctl**, **wireplumber**, **libnotify**
-- **ImageMagick** (wallpaper thumbnails)
+- **brightnessctl**, **wireplumber**, **libnotify**, **playerctl**
+- **ImageMagick** (wallpaper thumbnails, lock blur)
 
 See [nixConfig](https://github.com/rebatnaath/nixConfig) for the full list.
