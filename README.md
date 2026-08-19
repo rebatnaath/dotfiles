@@ -37,6 +37,46 @@ icons rendered on the bar, lock, and power menu.
 **Nerv**
 ![nerv-bar-1](assets/nerv-1.png) · ![nerv-bar-2](assets/nerv-2.png)
 
+## Control menu
+
+There is one shared control menu (the Quickshell quick menu) used by every bar
+variant. All bars open it by clicking a spot in their own layout:
+
+- **Fox** — click the `ctrls` button on the right.
+- **Lonely** — click any of the right info blocks (`[bat]`, `[vol]`, `[time]`).
+- **Nerv** — click the `MAGI SYSTEM` label on the right.
+
+The menu's colours follow the bar. For **nerv** the whole control center is the
+fixed EVA red and cannot be rethemed at runtime; for **fox** and **lonely** it
+picks up the wallpaper-derived matugen palette, so it follows whatever
+wallpaper you apply.
+
+The menu is the **control center** (bluetooth, wifi, brightness, volume, media)
+plus a set of pages, each reachable via its own panel below (thumbnails
+pending):
+
+**Control center**
+![ctrl-overview](assets/ctrl-overview.png)
+
+**Wallpaper picker**
+![ctrl-wallpaper](assets/ctrl-wallpaper.png)
+
+**Tweaks / settings** — the same panel bound to `Super+W`
+![ctrl-tweaks](assets/ctrl-tweaks.png)
+
+**Clipboard history**
+![ctrl-clipboard](assets/ctrl-clipboard.png)
+
+**Notifications**
+![ctrl-notification](assets/ctrl-notification.png)
+
+**Power menu**
+![ctrl-power](assets/ctrl-power.png)
+
+The `assets/ctrl-*.png` images above are placeholders — drop in real
+screenshots over them. You can also tweak which of these pages appears and how
+things behave; the pages/hotkeys live in `quickshell/bar/QuickMenu.qml`.
+
 ## Install
 
 Clone and symlink the dirs you want into `~/.config/`:
