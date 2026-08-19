@@ -11,7 +11,7 @@ var SETTINGS = {
     osdBorder: true,
     osdShadow: true,
     barFullWidth: false,
-    activeBar: "nerv",
+    activeBar: "lonely",
     nightLight: true,
     nightLightIntensity: 4,
     noiseLevel: 3,
