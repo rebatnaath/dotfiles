@@ -37,10 +37,21 @@ The wallpaper directory is **not part of this repo** — it lives in
 cloning/symlinking, point the scripts at your own wallpaper folder by editing
 the `WALLS` path in these two files:
 
-- `sway/scripts/wall-pick` — change the `WALLS="${WALLS_DIR:-...}"` line to your
-  wallpaper directory (or export a `WALLS_DIR` env var instead).
-- `sway/scripts/theme-switch` — update the `NERV_WALL` / `sand-dune` default
-  paths (lines ~44–45 and ~88) to your own images.
+- `sway/scripts/wall-pick` — change the `WALLS` line to your wallpaper
+  directory (or export a `WALLS_DIR` env var instead):
+
+  ```sh
+  WALLS="${WALLS_DIR:-$HOME/nixConfig/assets/walls}"
+  ```
+
+- `sway/scripts/theme-switch` — update the `NERV_WALL` fallback defaults and
+  the restore-image path to your own images:
+
+  ```sh
+  NERV_WALL="$HOME/nixConfig/assets/walls/eva/main.png"
+  [[ -f "$NERV_WALL" ]] || NERV_WALL="$HOME/nixConfig/assets/walls/sand-dune.jpg"
+  update_wall_link "$HOME/nixConfig/assets/walls/sand-dune.jpg"
+  ```
 
 ## Requirements
 
