@@ -52,33 +52,24 @@ picks up the wallpaper-derived matugen palette, so it follows whatever
 wallpaper you apply.
 
 The menu is the **control center** (bluetooth, wifi, brightness, volume, media)
-plus a set of pages, each with its own panel:
+plus a set of pages, each with its own panel (the control center recolours live
+when you change the wallpaper for fox/lonely; the nerv control center is always
+the fixed EVA red):
 
-**Control center**
-![ctrl-overview](assets/ctrl-overview.png)
-
-**Wallpaper picker**
-![ctrl-wallpaper](assets/ctrl-wallpaper.png)
-
-**Tweaks / settings** — the same panel bound to `Super+W`
-![ctrl-tweaks](assets/ctrl-tweaks.png)
-
-**Clipboard history**
-![ctrl-clipboard](assets/ctrl-clipboard.png)
-
-**Notifications**
-![ctrl-notification](assets/ctrl-notification.png)
-
-**Power menu**
-![ctrl-power](assets/ctrl-power.png)
-
-The control center recolours live when you change the wallpaper (fox/lonely):
-
-**Control center, colour follows the wallpaper**
-![control-center-colour-change](assets/example-control-center-color-change-wallpaper.png)
-
-**Nerv control center** — always the fixed EVA red, not changeable:
-![nerv-control-center](assets/nerv-contrl-center.png)
+<table>
+  <tr>
+    <td align="center"><img src="assets/ctrl-overview.png" width="180"><br><b>Control center</b></td>
+    <td align="center"><img src="assets/ctrl-wallpaper.png" width="180"><br><b>Wallpaper picker</b></td>
+    <td align="center"><img src="assets/ctrl-tweaks.png" width="180"><br><b>Tweaks / Super+W</b></td>
+    <td align="center"><img src="assets/ctrl-clipboard.png" width="180"><br><b>Clipboard</b></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="assets/ctrl-notification.png" width="180"><br><b>Notifications</b></td>
+    <td align="center"><img src="assets/ctrl-power.png" width="180"><br><b>Power menu</b></td>
+    <td align="center"><img src="assets/example-control-center-color-change-wallpaper.png" width="180"><br><b>Recolours with wallpaper</b></td>
+    <td align="center"><img src="assets/nerv-contrl-center.png" width="180"><br><b>Nerv control center (fixed red)</b></td>
+  </tr>
+</table>
 
 The bar also drives its own on-screen displays:
 
