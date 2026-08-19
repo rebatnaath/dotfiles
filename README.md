@@ -1,5 +1,19 @@
 # dotfiles
 
+This was a personal SwayFX rice for myself — since a few of you asked for the
+dotfiles, I'm posting them here. I'd like to be helpful, and some of you might
+be new to this kind of thing (or not), so that's why the README is a bit
+detailed. Don't cringe on me, please.
+
+> **Important:** a few of these configurations might work, might not — there
+> could be bugs and what-not. It works on *my* system, but I don't know about
+> yours. It was only tested on a single-monitor 1920x1080 display; no idea about
+> anything else. If you just want to steal the bar or the quickmenu config,
+> that's totally fine. But if you're going to literally use this whole thing as
+> your system, I won't be liable if it breaks anything. If you really want
+> something fixed and don't know how, open an issue — depending on how
+> free/busy I am, I might patch it and let you know.
+
 Personal desktop configuration: **Sway** (SwayFX) + **Quickshell** bar, plus
 the supporting terminal/theme tooling. The companion `nixConfig` repo contains
 the NixOS setup that installs the packages; this repo holds the raw configs
