@@ -16,6 +16,27 @@ that you can drop straight into `~/.config/`.
 | `nvim/`     | neovim config                                           |
 | `fastfetch/` | fastfetch system info config                                       |
 
+## Bars & themes
+
+The Quickshell bar ships with two bar types plus a separate accent theme
+(switch with `activeBar` in `quickshell/bar/settings.js`):
+
+- **Fox** — a foxes themed bottom bar.
+- **Lonely** — a single-colour accent bar (focused workspace + window title
+  share the lightest matugen tone, inactive workspaces get darkened chips).
+
+**Nerv** — a separate Evangelion theme: the EVA backdrop plus 20 character
+icons rendered on the bar, lock, and power menu.
+
+**Fox**
+![fox-bar-1](assets/fox-1.png) · ![fox-bar-2](assets/fox-2.png)
+
+**Lonely**
+![lonely-bar-1](assets/lonely-1.png) · ![lonely-bar-2](assets/lonely-2.png)
+
+**Nerv**
+![nerv-bar-1](assets/nerv-1.png) · ![nerv-bar-2](assets/nerv-2.png)
+
 ## Install
 
 Clone and symlink the dirs you want into `~/.config/`:
