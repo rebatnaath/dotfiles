@@ -13,7 +13,7 @@ detailed. Don't cringe on me, please.
 > your system, I won't be liable if it breaks anything. If you really want
 > something fixed and don't know how, open an issue; depending on how
 > free/busy I am, I might patch it and let you know.
->also since i use ethernet my internet is automatically connected, dont use Bluetooth to i havent created the wifi connect menu and such id you need it you can add that yourself 
+>also since i use ethernet my internet is automatically connected, dont use Bluetooth so i havent created the wifi connect menu and such if you need it you can add that yourself 
 ## What you get
 
 Everything here drops straight into `~/.config/` and gives you a **SwayFX**
