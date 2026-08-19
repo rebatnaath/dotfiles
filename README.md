@@ -35,3 +35,18 @@ ln -sf ~/dotfiles/fastfetch ~/.config/fastfetch
 `.config`-managed rice for my NixOS desktop, with the full setup in
 https://github.com/rebatnaath/nixConfig. This repo holds just the configs
 themselves; the flake there installs the required packages.
+
+Minimum to run this config on a distro of your own:
+
+- **SwayFX** (or sway) with XWayland
+- **Quickshell** (bar, OSD, notifications, picker)
+- **kitty** terminal
+- **rofi** app launcher
+- **matugen** (wallpaper → color-scheme generation)
+- **swaybg** / **swaylock** / **swayidle**
+- **grim** + **slurp** (screenshots), **wl-clipboard** (clipboard)
+- **cliphist** (clipboard history), **wl-screenrec** (recording)
+- **brightnessctl**, **wireplumber**, **libnotify**
+- **ImageMagick** (wallpaper thumbnails)
+
+See [nixConfig](https://github.com/rebatnaath/nixConfig) for the full list.
