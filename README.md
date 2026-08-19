@@ -30,6 +30,18 @@ ln -sf ~/dotfiles/nvim ~/.config/nvim
 ln -sf ~/dotfiles/fastfetch ~/.config/fastfetch
 ```
 
+## Wallpapers
+
+The wallpaper directory is **not part of this repo** — it lives in
+[nixConfig](https://github.com/rebatnaath/nixConfig)`/assets/walls`. After
+cloning/symlinking, point the scripts at your own wallpaper folder by editing
+the `WALLS` path in these two files:
+
+- `sway/scripts/wall-pick` — change the `WALLS="${WALLS_DIR:-...}"` line to your
+  wallpaper directory (or export a `WALLS_DIR` env var instead).
+- `sway/scripts/theme-switch` — update the `NERV_WALL` / `sand-dune` default
+  paths (lines ~44–45 and ~88) to your own images.
+
 ## Requirements
 
 `.config`-managed rice for my NixOS desktop, with the full setup in
