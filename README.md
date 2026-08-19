@@ -179,21 +179,36 @@ the `WALLS` path in these two files:
 
 ## Requirements
 
-`.config`-managed rice for my NixOS desktop, with the full setup in
-https://github.com/rebatnaath/nixConfig. This repo holds just the configs
-themselves; the flake there installs the required packages.
-
-Minimum to run this config on a distro of your own:
+This `~/.config`-managed rice targets my NixOS desktop; the full package list
+lives in the [nixConfig](https://github.com/rebatnaath/nixConfig) flake. This
+repo holds only the configs themselves. On a non-NixOS distro you'll want at
+least:
 
 - **SwayFX** (or sway) with XWayland
-- **Quickshell** (bar, OSD, notifications, picker, lockscreen)
-- **kitty** terminal
-- **rofi** app launcher
-- **matugen** (wallpaper → color-scheme generation)
-- **swaybg** / **swayidle**
+- **Quickshell** for the bar, OSD, notifications, picker and lockscreen
+- **matugen** to derive the colour scheme from your wallpaper
+- **swaybg** (wallpaper) and **swayidle** (auto-lock)
 - **grim** + **slurp** (screenshots), **wl-clipboard** (clipboard)
 - **cliphist** (clipboard history), **wl-screenrec** (recording)
 - **brightnessctl**, **wireplumber**, **libnotify**, **playerctl**
-- **ImageMagick** (wallpaper thumbnails, lock blur)
+- **ImageMagick** for wallpaper thumbnails and the lock-screen blur
+- **kitty** (default terminal) and **rofi** (app launcher)
 
-See [nixConfig](https://github.com/rebatnaath/nixConfig) for the full list.
+See the [nixConfig](https://github.com/rebatnaath/nixConfig) readme for the
+full dependency list.
+
+## GNOME widget extensions
+
+If you run GNOME (or have friends or family who do) and want a widget extension,
+here's one I made: **gridgets**. It's currently **awaiting review** on the GNOME
+extensions portal, so install at your own risk until it lands.
+
+<video src="assets/gridgets-schowcase.webm" controls></video>
+
+![gridgets weather widget](assets/gridgets-weather.svg)
+
+- **User guide**: https://github.com/rebatnaath/gridgets/blob/main/assets/github/user-guide/README.md
+- **Website**: https://rebatnaath.github.io/gridgets/
+
+If anything here errors or you can't get something working, open an issue on
+this repo and I'll do my best to help when I'm free.
