@@ -73,11 +73,12 @@ the fixed EVA red):
 
 The bar also drives its own on-screen displays:
 
-**Volume OSD**
-![volume-osd](assets/volume-osd.png)
-
-**Notification OSD**
-![notification-osd](assets/notification-osd.png)
+<table>
+  <tr>
+    <td align="center"><img src="assets/volume-osd.png"><br><b>Volume OSD</b></td>
+    <td align="center"><img src="assets/notification-osd.png"><br><b>Notification OSD</b></td>
+  </tr>
+</table>
 
 You can tweak which pages appear and how things behave; the pages and hotkeys
 live in `quickshell/bar/QuickMenu.qml`.
