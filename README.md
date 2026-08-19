@@ -200,15 +200,23 @@ full dependency list.
 ## GNOME widget extensions
 
 If you run GNOME (or have friends or family who do) and want a widget extension,
-here's one I made: **gridgets**. It's currently **awaiting review** on the GNOME
-extensions portal, so install at your own risk until it lands.
+here's one I made: [**gridgets**](https://rebatnaath.github.io/gridgets/). It's currently **awaiting review** on the GNOME
+extensions portal, so install at your own risk until it lands. you can read more about it on [user guide](https://github.com/rebatnaath/gridgets/blob/main/assets/github/user-guide/README.md), [github repo](https://github.com/rebatnaath/gridgets)
 
 <video src="assets/gridgets-schowcase.webm" controls></video>
 
-<img src="assets/gridgets-weather.svg" width="280" alt="gridgets weather widget">
+A few of the widgets it comes with:
 
-- **User guide**: https://github.com/rebatnaath/gridgets/blob/main/assets/github/user-guide/README.md
-- **Website**: https://rebatnaath.github.io/gridgets/
+<table>
+  <tr>
+    <td align="center"><a href="assets/gridgets-weather.svg"><img src="assets/gridgets-weather.svg" width="180"></a><br>Weather</td>
+    <td align="center"><a href="assets/weather-minimal.svg"><img src="assets/weather-minimal.svg" width="180"></a><br>Weather minimal</td>
+    <td align="center"><a href="assets/weather-forecast.svg"><img src="assets/weather-forecast.svg" width="180"></a><br>Weather forecast</td>
+    <td align="center"><a href="assets/music-large.svg"><img src="assets/music-large.svg" width="180"></a><br>Music</td>
+  </tr>
+</table>
+
+
 
 If anything here errors or you can't get something working, open an issue on
 this repo and I'll do my best to help when I'm free.
