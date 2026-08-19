@@ -4,20 +4,19 @@ import QtQuick
 import "../components"
 
 // The "lonely" bar: a single-colour accent bar where the background and the
-// active workspace share one matugen colour (so the active workspace blends
-// invisibly into the bar), while inactive workspaces get a darkened matugen
-// chip. Workspaces (roman numerals) sit left, the focused window title centered,
-// the time right. The floating/shadow/border chrome comes from the shared
-// BarFace; the border is a solid face-colour ring.
+// active workspace share one colour (so the active workspace blends invisibly
+// into the bar), while inactive workspaces get a darkened chip. Workspaces
+// (roman numerals) sit left, the focused window title centered, the status
+// group right. The floating/shadow/border chrome comes from the shared BarFace;
+// the border is a solid face-colour ring.
 BarFace {
     id: lonelyBar
-    // Time widget toggles between HH:MM and the full date on click.
-    property bool showDate: false
 
-    // The bar background and its border share one matugen colour (surface
-    // variant), opaque so it shows the same regardless of the wallpaper behind.
-    faceColor: root.getColor("muted", "#9b8f80")
-    borderColor: root.getColor("muted", "#9b8f80")
+    // The bar background and its border share one colour (opaque), set to the
+    // same mix(bg, primary, 25%) that sway uses for the active-window border so
+    // the bar matches a focused window (theme-switch writes the same blend).
+    faceColor: root.mixHex(root.getColor("bg", "#18130b"), root.getColor("accent", "#ffb691"), 0.25)
+    borderColor: root.mixHex(root.getColor("bg", "#18130b"), root.getColor("accent", "#ffb691"), 0.25)
     readonly property color itemColor: root.getColor("bg", "#18130b")
     // Focused-workspace + focused-window text share the lightest matugen tone
     // so they read clearly against the outline-coloured background/border.
@@ -96,7 +95,7 @@ BarFace {
 
     // System + time widgets on the right: full-height blocks flush against the
     // top/bottom/right borders, no outer margins (CSS .status-list). Each shows
-    // [bat %], [vol %], [HH:MM]; the time toggles to the date.
+    // [bat %], [vol %], [HH:MM]; clicking anywhere in the group opens the quick menu.
     Row {
         id: rightWidgets
         anchors.right: parent.right
@@ -117,6 +116,12 @@ BarFace {
                 font.pixelSize: 11 * root.uiScale
                 color: lonelyBar.fgText
             }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.isQuickMenuOpen = !root.isQuickMenuOpen
+            }
         }
 
         Rectangle {
@@ -132,6 +137,12 @@ BarFace {
                 font.pixelSize: 11 * root.uiScale
                 color: lonelyBar.fgText
             }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.isQuickMenuOpen = !root.isQuickMenuOpen
+            }
         }
 
         Rectangle {
@@ -142,16 +153,17 @@ BarFace {
             Text {
                 id: timeLabel
                 anchors.centerIn: parent
-                text: "[" + (lonelyBar.showDate ? root.dateText : root.timeText) + "]"
+                text: "[" + root.timeText + "]"
                 font.family: root.fontFamily
                 font.pixelSize: 11 * root.uiScale
                 color: lonelyBar.fgText
             }
 
+            // Whole right status group ([bat][vol][time]) opens the quick menu.
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: lonelyBar.showDate = !lonelyBar.showDate
+                onClicked: root.isQuickMenuOpen = !root.isQuickMenuOpen
             }
         }
     }
