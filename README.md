@@ -28,14 +28,13 @@ The Quickshell bar ships with two bar types plus a separate accent theme
 **Nerv** — a separate Evangelion theme: the EVA backdrop plus 20 character
 icons rendered on the bar, lock, and power menu.
 
-**Fox**
-![fox-bar-1](assets/fox-1.png) · ![fox-bar-2](assets/fox-2.png)
-
-**Lonely**
-![lonely-bar-1](assets/lonely-1.png) · ![lonely-bar-2](assets/lonely-2.png)
-
-**Nerv**
-![nerv-bar-1](assets/nerv-1.png) · ![nerv-bar-2](assets/nerv-2.png)
+<table>
+  <tr>
+    <td align="center"><b>Fox</b><br><img src="assets/fox-1.png" width="320"><br><img src="assets/fox-2.png" width="320"></td>
+    <td align="center"><b>Lonely</b><br><img src="assets/lonely-1.png" width="320"><br><img src="assets/lonely-2.png" width="320"></td>
+    <td align="center"><b>Nerv</b><br><img src="assets/nerv-1.png" width="320"><br><img src="assets/nerv-2.png" width="320"></td>
+  </tr>
+</table>
 
 ## Control menu
 
