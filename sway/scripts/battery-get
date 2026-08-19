@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Print battery status and capacity percent as "Charging:85", "Discharging:42", "Full:100", etc.
+# Prints empty or "Unknown:0" if no battery found.
+set -uo pipefail
+
+bat_dir=$(ls -d /sys/class/power_supply/BAT* 2>/dev/null | head -n 1)
+if [ -z "$bat_dir" ]; then
+    echo "Unknown:0"
+    exit 0
+fi
+
+cap=$(cat "$bat_dir/capacity" 2>/dev/null || echo 0)
+stat=$(cat "$bat_dir/status" 2>/dev/null || echo "Unknown")
+
+echo "${stat}:${cap}"

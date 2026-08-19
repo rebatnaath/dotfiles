@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# float-arrow <up|down|left|right>
+# If the focused window is floating, resize it in the arrow's direction;
+# otherwise move focus in that direction (the normal $mod+arrow behavior).
+#
+# Sway doesn't support criteria on bindsym (unlike i3), so we decide at
+# press-time by inspecting the focused node in the tree.
+dir="$1"
+
+if swaymsg -t get_tree | python3 -c '
+import json, sys
+tree = json.load(sys.stdin)
+def find(n):
+    if n.get("focused"):
+        return n
+    for c in n.get("nodes", []) + n.get("floating_nodes", []):
+        r = find(c)
+        if r:
+            return r
+    return None
+node = find(tree)
+sys.exit(0 if node and node.get("type") == "floating_con" else 1)
+'; then
+    case "$dir" in
+        up)    swaymsg resize grow height 20px ;;
+        down)  swaymsg resize shrink height 20px ;;
+        left)  swaymsg resize shrink width 20px ;;
+        right) swaymsg resize grow width 20px ;;
+    esac
+else
+    swaymsg focus "$dir"
+fi

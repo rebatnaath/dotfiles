@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+# Low-battery notifier: polls the battery every POLL_SEC, and when the battery
+# is *discharging* and at or below LOW_PCT it fires an urgent Quickshell
+# notification (via notify-send -> quickshell's NotificationServer) plus a
+# short beep. Warns only once per discharge episode (until it charges back
+# above RESET_PCT or starts charging) so it doesn't spam every poll.
+set -uo pipefail
+
+LOW_PCT="${LOW_PCT:-20}"
+RESET_PCT="${RESET_PCT:-$((LOW_PCT + 5))}"
+POLL_SEC="${POLL_SEC:-60}"
+SOUND="$HOME/.local/share/sounds/battery-low.wav"
+STATE_FILE="$HOME/.cache/battery-notify.state"
+
+SOUND_LIB="/home/oryza/.config/sway/scripts"   # fallback sound lookup dir
+
+# Keep only a single monitor running across `swaymsg reload` autostarts: hold an
+# exclusive flock on a lockfile for the lifetime of the process; if it's already
+# held, another instance is live, so exit. flock(1) is guaranteed on this system.
+LOCK_FILE="${LOCK_FILE:-$HOME/.cache/battery-notify.lock}"
+mkdir -p "$(dirname "$LOCK_FILE")"
+exec 9>"$LOCK_FILE"
+if ! flock -n 9; then
+    exit 0
+fi
+
+# ---- make a small alert beep if no sound file exists anywhere --------------
+ensure_sound() {
+    [[ -f "$SOUND" ]] && return 0
+    # Known candidates our setup might install; first existing one wins.
+    for c in "$SOUND_LIB/battery-low.wav" /usr/share/sounds/freedesktop/stereo/battery-low.oga \
+             /usr/share/sounds/freedesktop/stereo/message-new-instant.oga; do
+        [[ -f "$c" ]] && { ln -sf "$c" "$SOUND"; return 0; }
+    done
+    # None present: synthesize a two-tone 880Hz -> 1175Hz "ding" WAV.
+    python3 - "$SOUND" <<'PY'
+import math, os, struct, sys, wave
+
+path = sys.argv[1]
+os.makedirs(os.path.dirname(path), exist_ok=True)
+
+rate = 44100
+def samples(freq, dur, amp=0.5):
+    out = bytearray()
+    for i in range(int(rate * dur)):
+        v = amp * math.sin(2 * math.pi * freq * (i / rate))
+        out += struct.pack("<h", int(v * 32767))
+    return bytes(out)
+
+with wave.open(path, "w") as w:
+    w.setnchannels(1)
+    w.setsampwidth(2)
+    w.setframerate(rate)
+    w.writeframes(b"\x00\x00" * int(rate * 0.12))   # leading silence
+    w.writeframes(samples(880, 0.18))              # low ding
+    w.writeframes(b"\x00\x00" * int(rate * 0.08))  # gap
+    w.writeframes(samples(1174.66, 0.22))          # higher ding
+PY
+    return 0
+}
+
+play_sound() {
+    if command -v paplay >/dev/null 2>&1; then
+        paplay --volume=0 "$SOUND" >/dev/null 2>&1
+    elif command -v pw-play >/dev/null 2>&1; then
+        pw-play "$SOUND" >/dev/null 2>&1
+    fi
+}
+
+notify() {
+    ensure_sound
+    local pct="$1"
+    notify-send -a "battery" -u critical -t 0 \
+        "Battery low — ${pct}%" \
+        "Plug in a charger. The battery is discharging below ${LOW_PCT}%." \
+        >/dev/null 2>&1 || true
+    play_sound
+}
+
+# ---- main loop --------------------------------------------------------------
+[[ -s "$STATE_FILE" ]] && warned="$(cat "$STATE_FILE")" || warned="no"
+
+while true; do
+    bat_dir=$(ls -d /sys/class/power_supply/BAT* 2>/dev/null | head -n 1)
+    if [[ -n "$bat_dir" ]]; then
+        status="$(cat "$bat_dir"/status 2>/dev/null || echo Unknown)"
+        cap="$(cat "$bat_dir"/capacity 2>/dev/null || echo 0)"
+    else
+        status="Unknown"; cap=0
+    fi
+
+    if [[ "$status" == "Discharging" ]]; then
+        if (( cap <= LOW_PCT )); then
+            if [[ "$warned" != "yes" ]]; then
+                notify "$cap"
+                warned="yes"
+                printf '%s\n' "$warned" > "$STATE_FILE"
+            fi
+        else
+            # back above low band while still discharging -> re-arm
+            if (( cap > RESET_PCT )) && [[ "$warned" == "yes" ]]; then
+                warned="no"
+                printf '%s\n' "$warned" > "$STATE_FILE"
+            fi
+        fi
+    elif [[ "$status" == "Charging" || "$status" == "Full" ]]; then
+        if [[ "$warned" == "yes" ]]; then
+            warned="no"
+            printf '%s\n' "$warned" > "$STATE_FILE"
+        fi
+    fi
+
+    sleep "$POLL_SEC"
+done

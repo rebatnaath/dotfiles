@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Persist night-light state + apply it seamlessly, WITHOUT the full
+# rice-settings-apply (no sway reload, no kitty/border reprocessing). Keeping
+# sway out of the loop means the gammacontrol isn't reset (the filter stays on)
+# and the wallpaper isn't re-rendered.
+#
+# Usage: nightlight-apply [on|off] [intensityPct]
+set -uo pipefail
+
+MODE="${1:-on}"
+PCT="${2:-3}"
+
+SETTINGS_JS="$HOME/.config/quickshell/bar/settings.js"
+NL_SCRIPT="$HOME/.config/sway/scripts/nightlight-toggle"
+
+# In-place update of only the two night-light tokens in settings.js so the bar
+# and wallpaper-picker stay in sync when they poll the file. Intensity is a 0-5
+# preset (mirrors the E-Ink grain slider).
+python3 - "$MODE" "$PCT" "$SETTINGS_JS" <<'PY'
+import re, sys
+mode, pct, path = sys.argv[1], sys.argv[2], sys.argv[3]
+on = mode != "off"
+pct = max(0, min(5, int(float(pct))))
+s = open(path).read()
+s = re.sub(r'(\s*nightLight\s*:\s*)(true|false)(,)',
+           lambda m: m.group(1) + ("true" if on else "false") + m.group(3), s, count=1)
+s = re.sub(r'(\s*nightLightIntensity\s*:\s*)\d+(,)',
+           lambda m: m.group(1) + str(pct) + m.group(2), s, count=1)
+open(path, "w").write(s)
+PY
+
+if [[ "$MODE" == "off" ]]; then
+    "$NL_SCRIPT" off
+else
+    "$NL_SCRIPT" on "$PCT"
+fi

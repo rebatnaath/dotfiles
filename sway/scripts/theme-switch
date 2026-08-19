@@ -1,0 +1,563 @@
+#!/usr/bin/env bash
+# Theme-switch: set a wallpaper and retheme sway borders + kitty with matugen.
+# Usage:
+#   theme-switch <wallpaper-path>   # apply a new wallpaper + theme
+#   theme-switch                    # re-apply the stored theme (mode=restore)
+set -euo pipefail
+
+# Serialise theme-switch runs: the wallpaper picker fires the full retheme in a
+# detached background job, and the nerv-bar cross can spawn another one — guard
+# against two matugen + config-write passes fighting over the same files. Holding
+# the lock across the whole script makes the later run re-apply the latest intent.
+exec 9>"$HOME/.cache/.theme-switch.lock"
+flock 9
+
+WALL="${1:-}"
+STATE="$HOME/.cache/sway-theme.json"
+CACHE="$HOME/.cache"
+KITTY_CONF="$HOME/.config/kitty/kitty.conf"
+SWAY_THEME="$HOME/.config/sway/theme-colors"
+QS_PICKER="$HOME/.config/quickshell/wallpaper-picker"
+QS_COLORS="$QS_PICKER/colors.js"
+QS_BAR="$HOME/.config/quickshell/bar"
+QS_COLORS_BAR="$QS_BAR/colors.js"
+QS_POWER="$HOME/.config/quickshell/powermenu"
+QS_COLORS_POWER="$QS_POWER/colors.js"
+ROFI_THEME="$HOME/.config/rofi/theme.rasi"
+GTK3_CSS="$HOME/.config/gtk-3.0/gtk.css"
+GTK4_CSS="$HOME/.config/gtk-4.0/gtk.css"
+FISH_THEME="$HOME/.config/fish/conf.d/theme.fish"
+BLE_THEME="$HOME/.config/blesh/init.sh"
+FOX_CHROME="$HOME/.config/mozilla/firefox/evdp80ux.default-release/chrome"
+FOX_UC="$FOX_CHROME/userChrome.css"
+FOX_CONTENT="$FOX_CHROME/userContent.css"
+mkdir -p "$QS_PICKER" "$QS_BAR" "$QS_POWER" "$(dirname "$ROFI_THEME")" "$(dirname "$SWAY_THEME")" "$(dirname "$GTK3_CSS")" "$(dirname "$GTK4_CSS")" "$(dirname "$FISH_THEME")" "$(dirname "$BLE_THEME")" "$(dirname "$FOX_UC")"
+MONITOR="${MONITOR:-eDP-1}"
+
+# NERV mode: if the active bar is the nerv bar, force a fixed red theme instead
+# of deriving the palette from the wallpaper. Read live from settings.js.
+activeBar="$(python3 -c 'import re;m=re.search(r"activeBar:\s*\"([^\"]*)\"",open("'$HOME'/.config/quickshell/bar/settings.js").read());print(m.group(1) if m else "fox")' 2>/dev/null || true)"
+NERV=0
+[[ "$activeBar" == "nerv" ]] && NERV=1
+# Fixed NERV backdrop shown whenever the nerv bar is active, so the red theme
+# and the EVA wallpaper stay together regardless of any stored selection.
+NERV_WALL="$HOME/nixConfig/assets/walls/eva/main.png"
+[[ -f "$NERV_WALL" ]] || NERV_WALL="$HOME/nixConfig/assets/walls/sand-dune.jpg"
+
+# Keep a stable symlink at ~/.cache/current-wallpaper pointing at the active
+# wallpaper. The sway config's `output * bg` line references this path, so the
+# stored wallpaper is the default at login (no flash of the stock image while
+# matugen runs).
+update_wall_link() {
+    mkdir -p "$HOME/.cache"
+    ln -sf "$1" "$HOME/.cache/current-wallpaper"
+}
+
+# ---- fast mode: swap the wallpaper now, retheme in the background ----
+# Used by the QuickMenu/standalone wallpaper pickers so clicking a tile gives
+# instant visual feedback; matugen + config writes + bar restart then catch up
+# in a detached job.
+if [[ "${1:-}" == "--fast" ]]; then
+    if [[ "$NERV" == "1" ]]; then
+        WALL="$NERV_WALL"
+    else
+        WALL="${2:-}"
+    fi
+    [[ -f "$WALL" ]] || { echo "theme-switch: wallpaper not found: $WALL" >&2; exit 1; }
+    update_wall_link "$WALL"
+    swaymsg output "$MONITOR" bg "$WALL" fill > /dev/null 2>&1 || true
+    # Full retheme (same script, no --fast) in the background.
+    nohup setsid bash -c "$(printf '%q ' "$0" "$WALL")" >/dev/null 2>&1 &
+    exit 0
+fi
+
+# Prefer a real binary; fall back to the nix store so this works before any rebuild.
+MATUGEN_BIN="$(command -v matugen 2>/dev/null || true)"
+MAGICK_BIN="$(command -v magick 2>/dev/null || true)"
+
+if [[ -z "$WALL" ]]; then
+    # restore mode: reuse the stored wallpaper
+    if [[ -f "$STATE" ]]; then
+        WALL="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["wallpaper"])' "$STATE")"
+    else
+        # No wallpaper stored yet: pin to the NERV image in nerv mode, else the
+        # default startup image, so the config's `output * bg` line resolves.
+        if [[ "$NERV" == "1" ]]; then
+            update_wall_link "$NERV_WALL"
+        else
+            update_wall_link "$HOME/nixConfig/assets/walls/sand-dune.jpg"
+        fi
+        exit 0
+    fi
+fi
+
+# NERV mode: pin the wallpaper to the fixed EVA backdrop for the main path too.
+if [[ "$NERV" == "1" ]]; then
+    WALL="$NERV_WALL"
+fi
+
+[[ -f "$WALL" ]] || { echo "theme-switch: wallpaper not found: $WALL" >&2; exit 1; }
+update_wall_link "$WALL"
+
+# ---- 1) decide light/dark from wallpaper brightness ----
+mean="$(
+    if [[ -n "$MAGICK_BIN" ]]; then "$MAGICK_BIN" "$WALL" -format '%[fx:mean]' info: 2>/dev/null
+    else nix run nixpkgs#imagemagick -- "$WALL" -format '%[fx:mean]' info: 2>/dev/null
+    fi || true
+)"
+[[ -z "$mean" ]] && mean=0.5
+mode="dark"; prefer="darkness"
+python3 -c "import sys; sys.exit(0 if float('$mean') >= 0.5 else 1)" && { mode="light"; prefer="lightness"; }
+
+# ---- 2) extract scheme with matugen ----
+if [[ -n "$MATUGEN_BIN" ]]; then
+    MATUGEN=( "$MATUGEN_BIN" )
+else
+    MATUGEN=( nix run nixpkgs#matugen -- )
+fi
+
+if ! "${MATUGEN[@]}" image "$WALL" -m "$mode" --prefer "$prefer" --json hex > "$CACHE/matugen.json" 2>/dev/null; then
+    echo "theme-switch: matugen failed to extract colors" >&2
+    exit 1
+fi
+
+# ---- 3) write kitty.conf, theme-colors.lua, picker colors.js and the state file ----
+KITTY_CONF="$KITTY_CONF" SWAY_THEME="$SWAY_THEME" QS_COLORS="$QS_COLORS" QS_COLORS_BAR="$QS_COLORS_BAR" QS_COLORS_POWER="$QS_COLORS_POWER" ROFI_THEME="$ROFI_THEME" GTK3_CSS="$GTK3_CSS" GTK4_CSS="$GTK4_CSS" FISH_THEME="$FISH_THEME" BLE_THEME="$BLE_THEME" FOX_UC="$FOX_UC" FOX_CONTENT="$FOX_CONTENT" \
+STATE="$STATE" MODE="$mode" WALL="$WALL" MATUGEN_JSON="$CACHE/matugen.json" NERV="$NERV" \
+python3 - <<'PY'
+import json, os
+
+with open(os.environ["MATUGEN_JSON"]) as f:
+    data = json.load(f)
+
+mode = os.environ["MODE"]
+wall = os.environ["WALL"]
+scheme = data["colors"]
+
+def g(key, variant=None):
+    # matugen 4.x: colors are { light: {color}, dark: {color}, default: {color} }
+    return scheme[key][(variant or mode)]["color"][1:].lower()
+
+bg = g("background")
+fg = g("on_background")
+primary = g("primary")
+on_primary = g("on_primary")
+secondary = g("secondary")
+tertiary = g("tertiary")
+error = g("error")
+outline = g("outline")
+s_variant = g("surface_variant")
+p_container = g("primary_container")
+s_container = g("secondary_container")
+
+# Container/surface roles are light tints in light mode: fine as backgrounds,
+# but unreadable as terminal text (kitty color4/5/8) on the light background.
+# Swap in their dark-mode variants for light schemes so those slots stay
+# legible while keeping the theme's hue.
+if mode == "light":
+    p_container = g("primary_container", "dark")
+    s_container = g("secondary_container", "dark")
+    s_variant = g("surface_variant", "dark")
+
+# NERV mode: pin every slot to a fixed red theme (matching the nerv bar's
+# #9D0A12 border on black) so nothing follows the wallpaper.
+if os.environ.get("NERV") == "1":
+    mode = "dark"
+    bg = "0d0707"
+    fg = "f2d2d2"
+    primary = "e51111"
+    on_primary = "ffffff"
+    secondary = "a00a0a"
+    tertiary = "ff4b4b"
+    error = "ff5555"
+    outline = "8a5a5a"
+    s_variant = "2a1414"
+    p_container = "5a0c0c"
+    s_container = "3a1111"
+
+
+def mix(a, b, t):
+    ai = [int(a[i:i+2], 16) for i in (0, 2, 4)]
+    bi = [int(b[i:i+2], 16) for i in (0, 2, 4)]
+    return "".join("{:02x}".format(int(ai[i] + (bi[i] - ai[i]) * t)) for i in range(3))
+
+# kitty
+kitty = {
+    "foreground": "#" + fg,
+    "background": "#" + bg,
+    "selection_background": "#" + primary,
+    "selection_foreground": "#" + on_primary,
+    "cursor": "#" + primary,
+    "cursor_text_color": "#" + on_primary,
+    "active_border_color": "#" + primary,
+    "inactive_border_color": "#" + outline,
+    "url_color": "#" + tertiary,
+    "color0": "#" + bg,
+    "color1": "#" + secondary,
+    "color2": "#" + tertiary,
+    "color3": "#" + error,
+    "color4": "#" + p_container,
+    "color5": "#" + s_container,
+    "color6": "#" + primary,
+    "color7": "#" + fg,
+    "color8": "#" + s_variant,
+    "color9": "#" + secondary,
+    "color10": "#" + tertiary,
+    "color11": "#" + error,
+    "color12": "#" + primary,
+    "color13": "#" + secondary,
+    "color14": "#" + primary,
+    "color15": "#" + fg,
+}
+# NERV mode: terminal border matches the bar border hex.
+if os.environ.get("NERV") == "1":
+    kitty["active_border_color"] = "#9d0a12"
+
+kitty_conf = """font_family GeistMono NFM
+font_size 12
+
+# Shell integration is sourced and configured manually
+shell_integration no-rc
+
+# --- Theme generated by theme-switch (matugen) ---
+{colors}
+
+confirm_os_window_close 0
+enable_audio_bell no
+background_opacity 0.82
+background_blur 20
+window_padding_width 15
+mouse_hide_wait 3.0
+allow_remote_control yes
+""".format(colors="\n".join("{} {}".format(k, v) for k, v in kitty.items()))
+
+with open(os.environ["KITTY_CONF"], "w") as f:
+    f.write(kitty_conf)
+
+# sway border colors (persist across sway reload via include in sway config)
+# The bar's border is the accent at 25% alpha over the bar background, so the
+# window border uses that same blend to look identical to the bar border.
+border_soft = mix(bg, primary, 0.25)
+# NERV mode: match the nerv bar's hardcoded red border exactly.
+if os.environ.get("NERV") == "1":
+    border_soft = "9d0a12"
+sway_theme = """# Generated by theme-switch (matugen) -- do not edit by hand
+client.focused          #{border} #{bg} #{fg} #{border} #{border}
+client.focused_inactive #{inactive} #{bg} #{fg} #{inactive} #{inactive}
+client.unfocused        #{inactive} #{bg} #{fg} #{inactive} #{inactive}
+client.urgent           #{error} #{bg} #{fg} #{error} #{error}
+""".format(border=border_soft, inactive=outline, fg=fg, bg=bg, error=error)
+with open(os.environ["SWAY_THEME"], "w") as f:
+    f.write(sway_theme)
+
+# quickshell wallpaper-picker palette + power menu (colors follow the wallpaper)
+qs_colors = """// Wallpaper picker palette + power menu. Generated by theme-switch (matugen) -- do not edit by hand.
+.pragma library
+var COLORS = {{
+    bg: "#{bg}",
+    fg: "#{fg}",
+    accent: "#{primary}",
+    secondary: "#{secondary}",
+    surface_variant: "#{s_variant}",
+    muted: "#{outline}",
+}}
+""".format(bg=bg, fg=fg, primary=primary, secondary=secondary, s_variant=s_variant, outline=outline)
+with open(os.environ["QS_COLORS"], "w") as f:
+    f.write(qs_colors)
+with open(os.environ["QS_COLORS_BAR"], "w") as f:
+    f.write(qs_colors)
+with open(os.environ["QS_COLORS_POWER"], "w") as f:
+    f.write(qs_colors)
+
+# rofi theme (colors follow the wallpaper)
+rasi = """* {{
+    bg:            #{bg};
+    bg-alt:        #{bgal};
+    fg:            #{fg};
+    fg-dim:        #{fgdim};
+    accent:        #{accent};
+    tint:          #{tint};
+    border:        #{accent};
+    pad:           14px;
+    spacing:       10px;
+}}
+
+window {{
+    background-color: @bg;
+    border:            1px;
+    border-color:      @border;
+    border-radius:     0px;
+    padding:           0px;
+    margin:            0px;
+    width:             660px;
+    location:          center;
+    anchor:            center;
+}}
+
+mainbox {{
+    background-color: transparent;
+    border:            0px;
+    padding:           @pad;
+    spacing:           @spacing;
+    children:          [ inputbar, listview, message ];
+}}
+
+inputbar {{
+    background-color: @bg-alt;
+    border:           0px;
+    border-radius:    0px;
+    padding:          12px 14px;
+    spacing:          10px;
+    children:         [ entry ];
+}}
+
+entry {{
+    background-color:   transparent;
+    text-color:         @fg;
+    cursor-color:       @accent;
+}}
+
+listview {{
+    background-color:   transparent;
+    border:             0px;
+    layout:             vertical;
+    columns:            1;
+    lines:              9;
+    spacing:            8px;
+    padding:            14px 0px 4px 0px;
+    dynamic:            true;
+    cycle:              true;
+}}
+
+element {{
+    background-color: transparent;
+    border:           0px;
+    border-radius:    0px;
+    padding:          10px 14px;
+    margin:           0px;
+    spacing:          12px;
+    text-color:       @fg;
+}}
+
+element selected {{
+    background-color: @tint;
+    border:           0px;
+    text-color:       @accent;
+}}
+
+element-icon {{
+    background-color: transparent;
+    size:             32px;
+    padding:          0px;
+    vertical-align:   center;
+}}
+
+element-text {{
+    background-color: transparent;
+    text-color:       inherit;
+    vertical-align:   center;
+}}
+
+message {{
+    background-color: transparent;
+    border:           0px;
+    padding:          8px 0px 0px 0px;
+    text-color:       @fg-dim;
+}}
+
+error-message {{
+    background-color: @bg;
+    border-radius:    0px;
+    padding:          @pad;
+    text-color:       @fg;
+}}
+""".format(
+    bg=bg, bgal=mix(bg, fg, 0.07), fg=fg, fgdim=outline,
+    accent=primary, tint=mix(bg, primary, 0.12))
+with open(os.environ["ROFI_THEME"], "w") as f:
+    f.write(rasi)
+
+# GTK3/GTK4 (Adwaita named colors, wallpaper-tinted and fully opaque)
+# Sets the libadwaita/GTK palette from matugen. Uses the same opaque blend for
+# the headerbar border as the bar/window borders so GTK apps match the bar.
+# surface() = slightly elevated panel color; card() = hover/raised surfaces.
+surface = mix(bg, fg, 0.045)
+card = mix(bg, fg, 0.08)
+border_gtk = border_soft
+
+gtk_css = """/* Generated by theme-switch (matugen) -- do not edit by hand */
+
+@define-color window_bg_color #{bg};
+@define-color window_fg_color #{fg};
+@define-color view_bg_color #{surface};
+@define-color view_fg_color #{fg};
+@define-color headerbar_bg_color #{surface};
+@define-color headerbar_fg_color #{fg};
+@define-color headerbar_backdrop_color #{bg};
+@define-color headerbar_border_color #{border};
+@define-color sidebar_bg_color #{surface};
+@define-color sidebar_fg_color #{fg};
+@define-color sidebar_backdrop_color #{bg};
+@define-color sidebar_border_color #{border};
+@define-color card_bg_color #{card};
+@define-color card_fg_color #{fg};
+@define-color card_shade_color #{bg};
+@define-color popover_bg_color #{card};
+@define-color popover_fg_color #{fg};
+@define-color popover_border_color #{border};
+@define-color dialog_bg_color #{surface};
+@define-color dialog_fg_color #{fg};
+@define-color accent_bg_color #{accent};
+@define-color accent_fg_color #{on_accent};
+@define-color accent_color #{accent};
+
+/* GTK3 compatibility (theme_* are the legacy names) */
+@define-color theme_bg_color #{bg};
+@define-color theme_fg_color #{fg};
+@define-color theme_base_color #{surface};
+@define-color theme_text_color #{fg};
+@define-color theme_selected_bg_color #{accent};
+@define-color theme_selected_fg_color #{on_accent};
+""".format(
+    bg=bg, fg=fg, surface=surface, card=card,
+    accent=primary, on_accent=on_primary, border=border_gtk)
+with open(os.environ["GTK3_CSS"], "w") as f:
+    f.write(gtk_css)
+with open(os.environ["GTK4_CSS"], "w") as f:
+    f.write(gtk_css)
+
+# fish syntax highlighting (follows the wallpaper palette instead of fish's
+# default blue). Sourced automatically from conf.d on every fish startup.
+fish_theme = """# fish syntax highlighting. Generated by theme-switch (matugen) -- do not edit by hand.
+# Note: hex colors are quoted because an unquoted `#` starts a fish comment.
+set -g fish_color_normal          '#{fg}'
+set -g fish_color_command         '#{primary}'
+set -g fish_color_param           '#{fg}'
+set -g fish_color_option          '#{tertiary}'
+set -g fish_color_error           '#{error}'
+set -g fish_color_quote           '#{tertiary}'
+set -g fish_color_redirection     '#{primary}'
+set -g fish_color_operator        '#{secondary}'
+set -g fish_color_end             '#{primary}'
+set -g fish_color_escape          '#{primary}'
+set -g fish_color_comment         '#{muted}'
+set -g fish_color_autosuggestion  '#{muted}'
+set -g fish_color_selection       --background='#{primary}' --foreground='#{on_primary}'
+set -g fish_color_search_match    --background='#{primary}' --foreground='#{on_primary}'
+set -g fish_color_valid_path      --underline
+set -g fish_color_path            '#{secondary}'
+set -g fish_color_cwd             '#{primary}'
+""".format(fg=fg, primary=primary, secondary=secondary, tertiary=tertiary, error=error, muted=outline, on_primary=on_primary)
+with open(os.environ["FISH_THEME"], "w") as f:
+    f.write(fish_theme)
+
+# ble.sh syntax highlighting (bash line editor). Without this, ble.sh uses its
+# default colors, e.g. command_function fg=99 (blue-violet) for shell functions
+# like the user's `nix` wrapper. defface is first-wins, so these override the
+# defaults. ble.sh sources this file from ~/.config/blesh/init.sh at attach.
+ble_theme = """# ble.sh syntax highlighting. Generated by theme-switch (matugen) -- do not edit by hand.
+ble/color/defface syntax_command         fg=#{tertiary}
+ble/color/defface syntax_quoted          fg=#{tertiary}
+ble/color/defface syntax_quotation       fg=#{tertiary},bold
+ble/color/defface syntax_escape          fg=#{primary}
+ble/color/defface syntax_expr            fg=#{tertiary}
+ble/color/defface syntax_error           fg=#{error}
+ble/color/defface syntax_varname         fg=#{secondary}
+ble/color/defface syntax_param_expansion fg=#{secondary}
+ble/color/defface syntax_comment         fg=#{muted}
+ble/color/defface syntax_glob            fg=#{primary},bold
+ble/color/defface syntax_brace           fg=#{primary},bold
+ble/color/defface syntax_document        fg=#{muted}
+ble/color/defface syntax_document_begin  fg=#{muted},bold
+ble/color/defface command_builtin        fg=#{primary}
+ble/color/defface command_builtin_dot    fg=#{primary},bold
+ble/color/defface command_alias          fg=#{tertiary}
+ble/color/defface command_function       fg=#{primary}
+ble/color/defface command_file           fg=#{tertiary}
+ble/color/defface command_keyword        fg=#{primary}
+ble/color/defface command_jobs           fg=#{primary},bold
+ble/color/defface argument_option        fg=#{secondary}
+ble/color/defface argument_error         fg=#{error}
+ble/color/defface varname_unset          fg=#{muted}
+ble/color/defface varname_empty          fg=#{muted}
+ble/color/defface varname_number         fg=#{tertiary}
+ble/color/defface varname_array          fg=#{primary},bold
+ble/color/defface varname_hash           fg=#{tertiary},bold
+ble/color/defface varname_readonly       fg=#{primary},bold
+ble/color/defface varname_export         fg=#{primary},bold
+ble/color/defface varname_new            fg=#{tertiary}
+ble/color/defface filename_directory     underline,fg=#{tertiary}
+ble/color/defface filename_link          underline,fg=#{primary}
+ble/color/defface filename_executable    underline,fg=#{primary}
+ble/color/defface filename_url           underline,fg=#{primary}
+ble/color/defface filename_warning       underline,fg=#{error}
+""".format(fg=fg, primary=primary, secondary=secondary, tertiary=tertiary, error=error, muted=outline)
+with open(os.environ["BLE_THEME"], "w") as f:
+    f.write(ble_theme)
+
+# Firefox (FoxOne). FoxOne keeps its own 2871-line templates, so instead of
+# overwriting them we in-place swap the 5 --uc-color-* values plus the tab
+# hover text in its :root CONFIG blocks (userChrome.css + userContent.css).
+# base/surface/hover use the same opaque blends as the GTK target below, so
+# Firefox surfaces match GTK apps and the bar.
+fox_base = bg
+fox_surface = mix(bg, fg, 0.05)
+fox_accent = primary
+fox_text = fg
+fox_hover = mix(bg, fg, 0.08)
+fox_tab_hover = mix(primary, fg, 0.30)
+
+def fox_retouch(text):
+    import re
+    def c(v):
+        return "#" + v
+    # FoxOne's variable block (same keys in both files).
+    text = re.sub(r'--uc-color-base:\s*#[0-9a-fA-F]{6}', '--uc-color-base:    ' + c(fox_base), text)
+    text = re.sub(r'--uc-color-surface:\s*#[0-9a-fA-F]{6}', '--uc-color-surface: ' + c(fox_surface), text)
+    text = re.sub(r'--uc-color-accent:\s*#[0-9a-fA-F]{6}', '--uc-color-accent:  ' + c(fox_accent), text)
+    text = re.sub(r'--uc-color-text:\s*#[0-9a-fA-F]{6}', '--uc-color-text:    ' + c(fox_text), text)
+    text = re.sub(r'--uc-color-hover:\s*#[0-9a-fA-F]{6}', '--uc-color-hover:   ' + c(fox_hover), text)
+    # userChrome-only: inactive tab hover icon/title tint.
+    text = re.sub(r'--uc-tab-hover-text:\s*#[0-9a-fA-F]{6}', '--uc-tab-hover-text: ' + c(fox_tab_hover), text)
+    return text
+
+for var, path in (("FOX_UC", "FOX_UC"), ("FOX_CONTENT", "FOX_CONTENT")):
+    p = os.environ[path]
+    if os.path.isfile(p):
+        with open(p) as f:
+            content = f.read()
+        updated = fox_retouch(content)
+        if updated != content:
+            with open(p, "w") as f:
+                f.write(updated)
+
+with open(os.environ["STATE"], "w") as f:
+    json.dump({"wallpaper": wall, "mode": mode}, f, indent=2)
+
+print("mode={} active={} inactive={}".format(mode, primary, outline))
+PY
+
+# ---- 4) apply ----
+swaymsg reload > /dev/null 2>&1 || true
+swaymsg output "$MONITOR" bg "$WALL" fill > /dev/null 2>&1 || true
+
+# Reload the quickshell bar's palette in place. Before the bar gained live
+# reload (applyColors IPC) this killed and cold-restarted the whole quickshell
+# process, which dropped notifications/state and blanked the bar for a while.
+# Now we call its applyColors IpcHandler (it re-reads colors.js); fall back to
+# a restart only if IPC is unavailable or the bar isn't running.
+reload_bar() {
+    if quickshell ipc -p "$HOME/.config/quickshell/bar" call bar applyColors >/dev/null 2>&1; then
+        return 0
+    fi
+    # Fallback: bar absent or IPC unsupported -> full restart.
+    pgrep -f 'quickshell/bar' | while read -r pid; do kill "$pid" 2>/dev/null || true; done
+    sleep 0.3
+    nohup setsid "$HOME/.config/sway/scripts/quickshell-bar" >/dev/null 2>&1 &
+}
+reload_bar
+
+if command -v notify-send >/dev/null 2>&1; then
+    base="$(basename "$WALL")"
+    notify-send -a theme-switch -t 2500 "Theme applied" "$base · ${mode} scheme" >/dev/null 2>&1 || true
+fi

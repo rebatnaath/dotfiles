@@ -1,0 +1,23 @@
+{
+    "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+    "logo": { "type": "small", "padding": { "top": 1 } },
+    "display": {
+        "constants": ["██ "],
+        "separator": "",
+        "key": { "width": 8 }
+    },
+    "modules": [
+        "break",
+        { "type": "os", "key": "os", "keyColor": "red", "format": "{name} {version-id}" },
+        { "type": "kernel", "key": "ker", "keyColor": "green", "format": "{release}" },
+        { "type": "packages", "key": "pkgs", "keyColor": "yellow", "format": "{nix-system} / {nix-user}" },
+        { "type": "wm", "key": "wm", "keyColor": "blue", "format": "sway" },
+        { "type": "command", "key": "ram", "keyColor": "magenta", "text": "free -m | awk 'NR==2 {print $3 \" / \" $2 \" MB\"}'" },
+        { "type": "command", "key": "up", "keyColor": "cyan", "text": "awk '{printf \"%d min\", $1/60}' /proc/uptime" },
+        {
+            "type": "command",
+            "key": " ",
+            "text": "row=\"$(printf '\\033[93m󰮯\\033[0m  ')\"; for c in 31 35 36 33; do row=\"$row$(printf '\\033[%dm󰊠\\033[0m  ' $c)\"; done; printf '\\n              %s\\n' \"${row% }\""
+        }
+    ]
+}

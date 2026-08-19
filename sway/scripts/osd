@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# OSD: apply a volume/brightness step and write the state file the bar's OSD
+# window watches, so it can flash the new level on screen.
+# Usage: osd <volume|brightness> <up|down|mute>
+set -euo pipefail
+
+TYPE="${1:-}"
+ACTION="${2:-}"
+OSD_FILE="$HOME/.cache/quickshell-osd.json"
+
+case "$TYPE" in
+    volume)
+        case "$ACTION" in
+            # wpctl set-volume does not unmute a muted sink, so an explicit
+            # volume change first unmutes — otherwise raising the level stays
+            # silent (shows 100%, hears 0).
+            up)   wpctl set-mute @DEFAULT_AUDIO_SINK@ 0 || true; wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+ ;;
+            down) wpctl set-mute @DEFAULT_AUDIO_SINK@ 0 || true; wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%- ;;
+            mute) wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle ;;
+            *) echo "usage: osd volume <up|down|mute>" >&2; exit 1 ;;
+        esac
+        out="$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null || true)"
+        state=""
+        case "$out" in *MUTED*) state="muted" ;; esac
+        vol="$(printf '%s' "$out" | sed 's/.*Volume: //; s/ \[.*//')"
+        pct="$(python3 -c "print(int(round(float('$vol') * 100)))" 2>/dev/null || echo 0)"
+        printf '{"type":"volume","value":%s,"state":"%s"}\n' "$pct" "$state" > "$OSD_FILE"
+        ;;
+    brightness)
+        case "$ACTION" in
+            up)   brightnessctl -e4 -n2 set 5%+ ;;
+            down) brightnessctl -e4 -n2 set 5%- ;;
+            *) echo "usage: osd brightness <up|down>" >&2; exit 1 ;;
+        esac
+        pct=$(( $(brightnessctl get) * 100 / $(brightnessctl max) ))
+        printf '{"type":"brightness","value":%s}\n' "$pct" > "$OSD_FILE"
+        ;;
+    *)
+        echo "usage: osd <volume|brightness> <up|down|mute>" >&2
+        exit 1
+        ;;
+esac

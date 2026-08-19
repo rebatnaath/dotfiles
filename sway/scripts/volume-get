@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Print the default audio sink volume as an integer percent (0..100). Prefixed with
+# "M" when muted, e.g. "M60". Prints nothing on error.
+set -uo pipefail
+
+out="$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null)" || exit 0
+muted=""
+case "$out" in
+    *MUTED*) muted="M" ;;
+esac
+vol="$(printf '%s' "$out" | sed 's/.*Volume: //; s/ \[.*//')"
+pct="$(python3 -c "print(int(round(float('$vol') * 100)))" 2>/dev/null || echo 0)"
+echo "${muted}${pct}"

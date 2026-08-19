@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Quickshell bar launcher: prefer the installed binary, fall back to nix run until the rebuild.
+set -euo pipefail
+QS_BIN="$(command -v quickshell 2>/dev/null || true)"
+if [[ -n "$QS_BIN" ]]; then
+    exec "$QS_BIN" -p "$HOME/.config/quickshell/bar"
+else
+    exec nix run nixpkgs#quickshell -- -p "$HOME/.config/quickshell/bar"
+fi

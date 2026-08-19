@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+players=$(busctl --user list 2>/dev/null | awk '{print $1}' | grep '^org\.mpris\.MediaPlayer2\.')
+if [ -z "$players" ]; then
+    echo "None||||"
+    exit 0
+fi
+
+for p in $players; do
+    st=$(gdbus call --session --dest "$p" --object-path /org/mpris/MediaPlayer2 \
+        --method org.freedesktop.DBus.Properties.Get \
+        org.mpris.MediaPlayer2.Player PlaybackStatus 2>/dev/null \
+        | sed -n "s/.*'\([^']*\)'.*/\1/p")
+    if [ "$st" = "Playing" ] || [ "$st" = "Paused" ]; then
+        name=$(gdbus call --session --dest "$p" --object-path /org/mpris/MediaPlayer2 \
+            --method org.freedesktop.DBus.Properties.Get \
+            org.mpris.MediaPlayer2 Identity 2>/dev/null \
+            | sed -n "s/.*'\([^']*\)'.*/\1/p")
+        [ -z "$name" ] && name="${p#org.mpris.MediaPlayer2.}"
+
+        meta=$(gdbus call --session --dest "$p" --object-path /org/mpris/MediaPlayer2 \
+            --method org.freedesktop.DBus.Properties.GetAll \
+            org.mpris.MediaPlayer2.Player 2>/dev/null)
+
+        title=$(printf '%s' "$meta" | sed -n "s_.*'xesam:title': <\([^>]*\)>.*_\1_p" | sed "s/^'//;s/'$//;s/^\"//;s/\"$//")
+        artist=$(printf '%s' "$meta" | sed -n "s_.*'xesam:artist': <\([^>]*\)>.*_\1_p" | sed 's/\[//g;s/\]//g;s/^"//;s/"$//;s/^'\''//;s/'\''$//;s/'\'', '\''//g')
+
+        # Try mpris:artUrl first (Spotify, local players, etc.)
+        art=$(printf '%s' "$meta" | sed -n "s_.*'mpris:artUrl': <'\([^']*\)'>.*_\1_p")
+        if [ -z "$art" ]; then
+            art=$(printf '%s' "$meta" | sed -n 's_.*"mpris:artUrl": <"\([^"]*\)">.*_\1_p')
+        fi
+
+        # Fallback: YouTube thumbnail from xesam:url
+        if [ -z "$art" ]; then
+            url=$(printf '%s' "$meta" | sed -n "s_.*'xesam:url': <'\([^']*\)'>.*_\1_p")
+            if [ -n "$url" ]; then
+                # Extract video ID from youtube.com/watch?v=ID or youtu.be/ID
+                yt_id=$(printf '%s' "$url" | sed -n 's/.*[?&]v=\([^&]*\).*/\1/p')
+                if [ -z "$yt_id" ]; then
+                    yt_id=$(printf '%s' "$url" | sed -n 's|https://youtu.be/\([^?]*\).*|\1|p')
+                fi
+                if [ -n "$yt_id" ]; then
+                    art="https://i.ytimg.com/vi/${yt_id}/mqdefault.jpg"
+                fi
+            fi
+        fi
+
+        # Normalize local file paths for Qt Image
+        if [ -n "$art" ] && [ "${art#file://}" = "$art" ] && [ "${art#http}" = "$art" ]; then
+            art="file://$art"
+        fi
+
+        [ -z "$title" ] && title="$name"
+        echo "$st|${title}|${artist}|${name}|${art}"
+        exit 0
+    fi
+done
+
+echo "None||||"

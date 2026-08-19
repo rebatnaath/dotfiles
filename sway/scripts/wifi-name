@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Print the active wifi SSID, or nothing if wifi is off / not connected.
+set -uo pipefail
+nmcli -t -f IN-USE,SSID device wifi list --rescan no 2>/dev/null | python3 -c '
+import sys
+for line in sys.stdin:
+    line = line.rstrip("\n")
+    if not line.startswith("*:"):
+        continue
+    print(line[2:].replace("\\:", ":"))
+    break
+'

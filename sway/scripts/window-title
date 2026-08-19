@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Prints the title of the currently focused window (or nothing if there are no
+# open windows). Parsed via python3 (jq is not installed). Sway can present the
+# focused window as a plain "con" or as a "floating_con" wrapper that also
+# carries the title, so accept both.
+set -euo pipefail
+swaymsg -t get_tree | python3 -c '
+import sys, json
+tree = json.load(sys.stdin)
+def walk(nodes):
+    for n in nodes:
+        if (n.get("focused")
+                and n.get("type") in ("con", "floating_con")
+                and n.get("name")):
+            print(n["name"])
+            return
+        walk(n.get("nodes", []) + n.get("floating_nodes", []))
+walk([tree])
+'

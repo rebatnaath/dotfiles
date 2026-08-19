@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Toggle bluetooth power. Turning it on reconnects to the last paired device.
+set -uo pipefail
+
+if timeout 3 bluetoothctl show 2>/dev/null | grep -q 'Powered: yes'; then
+    bluetoothctl power off >/dev/null 2>&1
+else
+    bluetoothctl power on >/dev/null 2>&1
+    sleep 1
+    timeout 5 bluetoothctl devices Paired 2>/dev/null | awk '{print $2}' | while read -r mac; do
+        if timeout 3 bluetoothctl connect "$mac" >/dev/null 2>&1; then
+            break
+        fi
+    done
+fi

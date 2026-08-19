@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Print bluetooth state as "off", "on", or "on:<connected device name>".
+set -uo pipefail
+
+powered=$(timeout 3 bluetoothctl show 2>/dev/null | awk '/Powered:/{print $2}')
+if [ "$powered" != "yes" ]; then
+    echo "off"
+    exit 0
+fi
+
+dev=$(timeout 3 bluetoothctl devices Connected 2>/dev/null | sed -n '1s/^Device \([0-9A-F:]*\) \(.*\)$/\2/p')
+if [ -n "$dev" ]; then
+    echo "on:$dev"
+else
+    echo "on"
+fi

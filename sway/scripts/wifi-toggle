@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Toggle the wifi radio off/on. Turning it on auto-connects to the best known network.
+set -uo pipefail
+
+if [ "$(nmcli -g WIFI radio)" = "enabled" ]; then
+    nmcli radio wifi off
+else
+    nmcli radio wifi on
+    sleep 1
+    iface=$(nmcli -t -f DEVICE,TYPE device 2>/dev/null | awk -F: '$2 == "wifi" { print $1; exit }')
+    if [ -n "$iface" ]; then
+        nmcli device connect "$iface" 2>/dev/null
+    fi
+fi

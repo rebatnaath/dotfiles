@@ -1,0 +1,1 @@
+/home/oryza/.config/quickshell/bar/colors.js

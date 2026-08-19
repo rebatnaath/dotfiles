@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Enable/disable the night light using wlsunset (sway has no screen shaders).
+# Usage: nightlight-toggle [on|off] [intensity]
+#
+# Intensity is a 0-5 preset (like the E-Ink grain), higher = warmer/stronger:
+#   0 -> 5500K (no tint), 3 -> 4000K, 5 -> 2500K (strongest)
+# Only one wlsunset may hold the compositor gamma session, so the old process is
+# always taken down before the new one starts (a brief transition is inherent to
+# wlsunset). A lock serializes concurrent calls so rapid slider input can't race
+# and cause warm/blue flicker.
+set -uo pipefail
+
+LAT=27.7
+LON=85.3
+LEVEL="${2:-3}"
+LEVEL=$(( LEVEL > 5 ? 5 : (LEVEL < 0 ? 0 : LEVEL) ))
+NIGHT=$((5500 - LEVEL * 3000 / 5))
+DAY=6500
+
+case "${1:-}" in
+    on)
+        exec 9>"$HOME/.cache/.nightlight.lock"
+        flock 9
+        pkill -x wlsunset >/dev/null 2>&1 || true
+        setsid -f wlsunset -l "$LAT" -L "$LON" -t "$NIGHT" -T "$DAY" >/dev/null 2>&1
+        flock -u 9
+        ;;
+    off)
+        pkill -x wlsunset >/dev/null 2>&1 || true
+        ;;
+    *)
+        echo "usage: $0 [on|off] [intensity(0-5)]" >&2
+        exit 1
+        ;;
+esac

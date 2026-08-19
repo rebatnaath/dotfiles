@@ -1,0 +1,16 @@
+@theme "theme"
+
+configuration {
+    modes: "drun,run";
+    font: "Geist Mono 14";
+    show-icons: true;
+    drun-display-format: "{name}";
+    disable-history: true;
+    sort: false;
+    sidebar-mode: false;
+    // NOTE: rofi 2.0's "fuzzy" matcher is broken — it silently disables
+    // filtering (the list never changes as you type). "normal" is substring
+    // matching and works correctly.
+    matching: "normal";
+    click-to-exit: true;
+}
