@@ -52,8 +52,7 @@ picks up the wallpaper-derived matugen palette, so it follows whatever
 wallpaper you apply.
 
 The menu is the **control center** (bluetooth, wifi, brightness, volume, media)
-plus a set of pages, each reachable via its own panel below (thumbnails
-pending):
+plus a set of pages, each with its own panel:
 
 **Control center**
 ![ctrl-overview](assets/ctrl-overview.png)
@@ -73,9 +72,24 @@ pending):
 **Power menu**
 ![ctrl-power](assets/ctrl-power.png)
 
-The `assets/ctrl-*.png` images above are placeholders — drop in real
-screenshots over them. You can also tweak which of these pages appears and how
-things behave; the pages/hotkeys live in `quickshell/bar/QuickMenu.qml`.
+The control center recolours live when you change the wallpaper (fox/lonely):
+
+**Control center, colour follows the wallpaper**
+![control-center-colour-change](assets/example-control-center-color-change-wallpaper.png)
+
+**Nerv control center** — always the fixed EVA red, not changeable:
+![nerv-control-center](assets/nerv-contrl-center.png)
+
+The bar also drives its own on-screen displays:
+
+**Volume OSD**
+![volume-osd](assets/volume-osd.png)
+
+**Notification OSD**
+![notification-osd](assets/notification-osd.png)
+
+You can tweak which pages appear and how things behave; the pages and hotkeys
+live in `quickshell/bar/QuickMenu.qml`.
 
 ## Install
 
