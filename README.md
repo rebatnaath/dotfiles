@@ -205,7 +205,7 @@ extensions portal, so install at your own risk until it lands.
 
 <video src="assets/gridgets-schowcase.webm" controls></video>
 
-![gridgets weather widget](assets/gridgets-weather.svg)
+<img src="assets/gridgets-weather.svg" width="280" alt="gridgets weather widget">
 
 - **User guide**: https://github.com/rebatnaath/gridgets/blob/main/assets/github/user-guide/README.md
 - **Website**: https://rebatnaath.github.io/gridgets/
