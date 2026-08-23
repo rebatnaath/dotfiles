@@ -61,16 +61,11 @@ PanelWindow {
     // wallpaper list only when the wallpaper page becomes visible.
     function togglePage(pageName, reloadWallpapers) {
         var pageProperty = "is" + pageName + "PageOpen"
-        if (!root[pageProperty]) {
+        var wasOpen = root[pageProperty]
+        root.closeAllPages()
+        if (!wasOpen) {
             root[pageProperty] = true
-            root.isPowerPageOpen = (pageName === "Power")
-            root.isNotificationPageOpen = (pageName === "Notification")
-            root.isWallpaperPageOpen = (pageName === "Wallpaper")
-            root.isClipboardPageOpen = (pageName === "Clipboard")
-            root.isSettingsPageOpen = (pageName === "Settings")
             if (reloadWallpapers) wallpaperPage.setWallpapers(Picker.WALLS, Picker.ACTIVE)
-        } else {
-            root[pageProperty] = false
         }
     }
 
@@ -127,7 +122,7 @@ PanelWindow {
         // Consume clicks on the card so they don't reach the background closer
         MouseArea {
             anchors.fill: parent
-            onPressed: mouse.accepted = true
+            onPressed: (mouse) => mouse.accepted = true
         }
 
         Column {
@@ -248,7 +243,7 @@ PanelWindow {
                     artUrl: root.mediaArtUrl || ""
                     onPlayPauseRequested: root.toggleMediaPlay()
                     onNextRequested: {
-                        mediaNextProc.command = ["/home/oryza/.config/sway/scripts/media-control", "Next"]
+                        mediaNextProc.command = [root.swayScriptsDir + "/media-control", "Next"]
                         mediaNextProc.startDetached()
                         root.mediaResync.restart()
                     }

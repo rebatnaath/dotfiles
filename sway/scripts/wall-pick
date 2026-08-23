@@ -41,7 +41,7 @@ fi
 # Write the data file the picker reads (live list + absolute theme-switch path).
 if ! WALLS="$WALLS" THUMBS="$THUMBS" ACTIVE="$ACTIVE" THEME_SWITCH="$SCRIPT_DIR/theme-switch" \
     JSON_OUT="$QS_CONF/picker-data.json" \
-    python3 - > "$QS_CONF/picker.js" <<'PY'
+    python3 - > "$HOME/.config/quickshell/bar/picker-data.js" <<'PY'
 import json, os
 
 def js_str(s):
@@ -97,11 +97,7 @@ then
     exit 1
 fi
 
-# Mirror the same data into the bar dir so the QuickMenu's wallpaper page
-# (which imports it as a same-directory script) stays in sync.
-cp "$QS_CONF/picker.js" "$HOME/.config/quickshell/bar/picker-data.js"
-
-grep -q '"path"' "$QS_CONF/picker.js" || { echo "wall-pick: no wallpapers found in $WALLS" >&2; exit 1; }
+grep -q '"path"' "$HOME/.config/quickshell/bar/picker-data.js" || { echo "wall-pick: no wallpapers found in $WALLS" >&2; exit 1; }
 
 # Non-interactive mode: regenerate thumbs + data, then print the JSON so the
 # QuickMenu's wallpaper page can refresh at runtime (no picker is launched).

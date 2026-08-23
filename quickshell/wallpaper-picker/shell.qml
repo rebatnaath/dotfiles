@@ -1,8 +1,10 @@
 import Quickshell
 import Quickshell.Io
 import QtQuick
+// Shared palette / wallpaper data / components are symlinked from bar/
+// (quickshell rejects imports outside the config root, hence the links).
 import "colors.js" as Colors
-import "picker.js" as Picker
+import "picker-data.js" as Picker
 
 ShellRoot {
     id: root
@@ -118,6 +120,13 @@ ShellRoot {
         root.noiseLevel = level
         saveRiceSettings()
     }
+
+    function toggleNightLight() {
+        root.nightLight = !root.nightLight
+    }
+
+    // bar's shared SettingsPage binds to this
+    readonly property bool isNightLightEnabled: nightLight
 
     // Persist + apply a new intensity seamlessly without a full rice save.
     // Debounced so rapid slider input coalesces into a single apply.
@@ -280,6 +289,7 @@ ShellRoot {
                     anchors.fill: parent
                     visible: root.currentTab === 0
                 }
+
 
                     Column {
                         anchors.fill: parent

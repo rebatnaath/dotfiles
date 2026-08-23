@@ -6,7 +6,7 @@ Row {
     spacing: 6
 
     // System group: single "controls" label that opens the quick menu.
-    // Scroll wheel still adjusts volume.
+    // Scroll wheel adjusts volume.
     Rectangle {
         id: systemBox
         anchors.verticalCenter: parent.verticalCenter
@@ -16,8 +16,16 @@ Row {
 
         MouseArea {
             anchors.fill: parent
+            hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: root.isQuickMenuOpen = !root.isQuickMenuOpen
+            onWheel: (event) => {
+                if (event.angleDelta.y !== 0 || event.pixelDelta.y !== 0) {
+                    root.wheelAccum += event.angleDelta.y
+                    volumeCommitTimer.restart()
+                }
+                event.accepted = true
+            }
         }
 
         Row {
@@ -26,26 +34,11 @@ Row {
             spacing: 10
 
             Text {
-                id: controlsLabel
                 anchors.verticalCenter: parent.verticalCenter
                 text: "ctrls"
                 font.family: root.fontFamily
                 font.pixelSize: 14 * root.uiScale
                 color: root.getColor("fg", "#f0dfd8")
-
-                MouseArea {
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.isQuickMenuOpen = !root.isQuickMenuOpen
-                    onWheel: (event) => {
-                        if (event.angleDelta.y !== 0 || event.pixelDelta.y !== 0) {
-                            root.wheelAccum += event.angleDelta.y
-                            volumeCommitTimer.restart()
-                        }
-                        event.accepted = true
-                    }
-                }
             }
         }
     }

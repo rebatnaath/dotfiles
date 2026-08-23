@@ -1,6 +1,4 @@
-# Sway config — mirrors the old Hyprland setup (keybinds, gaps, aesthetics).
-# Wallpaper picker (Mod+W), theme switch (Mod+Shift+W) and power menu (Mod+M)
-# work exactly like before via the quickshell scripts.
+# Sway config
 
 set $mod Mod4
 set $terminal kitty
@@ -9,9 +7,7 @@ set $menu rofi -show drun
 
 ### Output configuration
 output * scale 1
-# Startup wallpaper = the last chosen one (theme-switch keeps this symlink up to
-# date), so login shows the stored wallpaper immediately instead of the stock
-# image while matugen rethemes in the background.
+# last chosen wallpaper (symlink kept fresh by theme-switch)
 output * bg ~/.cache/current-wallpaper fill
 
 ### Idle configuration
@@ -36,46 +32,41 @@ input "type:keyboard" {
 }
 
 ### Key bindings
-# Launch terminal / file manager / app launcher
 bindsym $mod+Return exec $terminal
-# Terminal in floating mode (dedicated class so the for_window rule can grab it)
+# floating terminal (class grabbed by the for_window rule below)
 bindsym $mod+Shift+Return exec kitty --class floatterm
 for_window [app_id="floatterm"] floating enable
 bindsym $mod+E exec $fileManager
 bindsym $mod+R exec $menu
 
-# Close focused window
 bindsym $mod+Q kill
-
-# Toggle floating
 bindsym $mod+V floating toggle
 
-# Wallpaper picker + theme switch (same shortcuts as before)
+# wallpaper / theme
 bindsym $mod+W exec $HOME/.config/sway/scripts/wall-pick
 bindsym $mod+Shift+W exec $HOME/.config/sway/scripts/theme-switch
 
-# Region screenshot (same grim + slurp command as the QuickMenu pill), saves and copies to clipboard
+# region screenshot -> file + clipboard
 bindsym $mod+Shift+S exec bash -c 'mkdir -p "$HOME/Pictures/Screenshots/sway" && grim -g "$(slurp)" - | tee "$HOME/Pictures/Screenshots/sway/screenshot-$(date +%Y-%m-%d_%H%M%S).png" | wl-copy'
 
-# Power menu
+# quickshell menu
 bindsym $mod+M exec quickshell ipc -p $HOME/.config/quickshell/bar call bar openPowerMenu
-# Notification panel (history) in the quick menu
 bindsym $mod+n exec quickshell ipc -p $HOME/.config/quickshell/bar call bar openNotifications
-# Clipboard history page in the quick menu
 bindsym $mod+Shift+v exec quickshell ipc -p $HOME/.config/quickshell/bar call bar openClipboard
-# Rice settings page in the quick menu
 bindsym $mod+Shift+i exec quickshell ipc -p $HOME/.config/quickshell/bar call bar openSettings
 
-# Toggle split layout
 bindsym $mod+J layout toggle split
 
-# Move focus, or resize when the focused window is floating (Super + arrows)
+# golden ratio spiral layout (optional arg = master %)
+bindsym $mod+G exec $HOME/.config/sway/scripts/golden-layout
+
+# focus, or resize floating windows (arrows)
 bindsym $mod+Left exec $HOME/.config/sway/scripts/float-arrow left
 bindsym $mod+Right exec $HOME/.config/sway/scripts/float-arrow right
 bindsym $mod+Up exec $HOME/.config/sway/scripts/float-arrow up
 bindsym $mod+Down exec $HOME/.config/sway/scripts/float-arrow down
 
-# Switch workspaces with mod + [0-9]; move window with mod + shift + [0-9]
+# workspaces
 bindsym $mod+1 workspace number 1
 bindsym $mod+2 workspace number 2
 bindsym $mod+3 workspace number 3
@@ -98,39 +89,32 @@ bindsym $mod+Shift+8 move container to workspace number 8
 bindsym $mod+Shift+9 move container to workspace number 9
 bindsym $mod+Shift+0 move container to workspace number 10
 
-# Scratchpad (special workspace)
+# scratchpad
 bindsym $mod+S scratchpad show
-# (moved from $mod+Shift+S, which is now the screenshot shortcut)
 bindsym $mod+Shift+minus move scratchpad
 
-# Scroll through workspaces
+# scroll workspaces
 bindsym $mod+button4 workspace prev
 bindsym $mod+button5 workspace next
 
-# Move/resize floating windows with mod + drag (left click moves, right resizes)
+# move/resize floating windows by dragging (left=move, right=resize)
 floating_modifier $mod normal
 
-# Reload/exit
+# reload / exit
 bindsym $mod+Shift+R reload
 bindsym $mod+Shift+X exec swaymsg exit
 
-# Show/hide the quickshell bar (Super+B), lock the screen (Super+L, blurred wallpaper)
 bindsym $mod+b exec quickshell ipc -p $HOME/.config/quickshell/bar call bar toggleBar
 bindsym $mod+l exec $HOME/.config/sway/scripts/lock.sh
 
-# Toggle screen recording (Super+PrtSc) — saves to ~/Videos/Recordings.
-# NOTE: the PrtSc-labelled key on this laptop physically sends F10 (keycode 76,
-# keysym F10), not Print — so it's bound to F10. Print is kept as a fallback in
-# case the key behaviour changes (e.g. Fn-lock).
+# screen recording (PrtSc key sends F10 on this laptop; Print kept as fallback)
 bindsym $mod+F10 exec $HOME/.config/sway/scripts/rec-toggle.sh
 bindsym $mod+Print exec $HOME/.config/sway/scripts/rec-toggle.sh
 
-# Full-screen screenshot (F10) — direct capture, no selection
+# fullscreen screenshot
 bindsym $mod+Shift+F10 exec bash -c 'mkdir -p "$HOME/Pictures/Screenshots/sway" && grim - | tee "$HOME/Pictures/Screenshots/sway/screenshot-$(date +%Y-%m-%d_%H%M%S).png" | wl-copy'
 
-# Laptop multimedia keys
-# Volume/brightness steps route through the osd script so the change also
-# flashes the new level in the quickshell OSD.
+# media keys (osd script flashes the level in the quickshell OSD)
 bindsym XF86AudioRaiseVolume exec $HOME/.config/sway/scripts/osd volume up
 bindsym XF86AudioLowerVolume exec $HOME/.config/sway/scripts/osd volume down
 bindsym XF86AudioMute exec $HOME/.config/sway/scripts/osd volume mute
@@ -149,23 +133,33 @@ gaps outer 30
 default_border pixel 4
 focus_follows_mouse yes
 
-# SwayFX effects (only active under swayfx; ignored by plain sway):
-# window blur so kitty's transparency actually blurs the background.
+# SwayFX blur
 blur enable
-blur_passes 3
-blur_radius 6
+blur_xray disable
+blur_passes 4
+blur_radius 8
+blur_noise 0.03
+blur_brightness 1.0
+blur_contrast 1.05
+blur_saturation 1.1
 
-# Flat aesthetics (no window titlebars)
-# Window border colors live in theme-colors (included below): theme-switch
-# regenerates them from the same palette the bar uses, so the active window
-# border always matches the bar accent.
+# shadows (off on CSD windows, doesn't fit them)
+shadows enable
+shadows_on_csd disable
+shadow_blur_radius 30
+shadow_color #00000066
+shadow_offset 0 6
+
+# animations: open/close, move/resize, workspace switch (swayfx 0.6+).
+# workspace transition is fade-only, no slide option exists.
+animation_duration_ms 300
+
+# theme-switch writes border colors, quickshell writes border/corner settings;
+# both included last so they win.
 include ~/.config/sway/theme-colors
-# Rice visual settings (default_border + corner_radius) written by the
-# quickshell settings page; included last so it overrides the Layout defaults.
 include ~/.config/sway/settings.conf
 
 ### Window rules
-# Quickshell wallpaper picker: floating, centered, no border
 for_window [title="^wallpaper-picker$"] floating enable, move position center
 for_window [title="^power-menu$"] floating enable, move position center
 for_window [title="^rofi$"] floating enable, move position center
@@ -174,23 +168,14 @@ for_window [app_id="^power-menu$"] border none
 for_window [app_id="^rofi$"] border none
 for_window [app_id="^imv$"] border pixel 4
 
-# Zen Browser floating windows (PiP, popups, manually-floated tabs): use a
-# visible pixel border instead of client-side decorations so they're clearly
-# delineated against the rest of the desktop.
+# zen popups/PiP get a pixel border
 for_window [app_id="zen-beta" floating] border pixel 4
 
 ### Autostart
-# Export session env for portals
 exec dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP
-# Activate the graphical session so xdg-desktop-portal (and its file-chooser
-# backend) can start — the portal service refuses to run without this target,
-# and graphical-session.target only allows being started as a dependency.
+# required by xdg-desktop-portal
 exec systemctl --user start sway-session.target
-# Quickshell bar (bottom)
 exec $HOME/.config/sway/scripts/quickshell-bar
-# Low-battery notifier (urgent notification + beep) when discharging below 20%
 exec $HOME/.config/sway/scripts/battery-notify
-# Clipboard history daemon: store every clipboard change in cliphist
 exec wl-paste --watch cliphist store
-# Re-apply stored wallpaper + theme at login
 exec $HOME/.config/sway/scripts/theme-switch

@@ -137,7 +137,6 @@ Column {
                 anchors.leftMargin: 3
                 anchors.rightMargin: 3
                 color: "transparent"
-                border.width: 0 * root.uiScale
 
                 Text {
                     id: previewText

@@ -29,20 +29,14 @@ ShellRoot {
         path: "/home/oryza/.config/quickshell/bar/settings.js"
         preload: true
         blockAllReads: true
-        watchChanges: false
+        watchChanges: true
+        onFileChanged: root.applyFont()
     }
 
     function applyFont(): void {
         settingsFile.reload()
         var m = /fontFamily:[ \t]*"([^"]*)"/.exec(settingsFile.text())
         if (m) root.fontFamily = m[1]
-    }
-
-    Timer {
-        interval: 400
-        running: true
-        repeat: true
-        onTriggered: root.applyFont()
     }
 
     // Current wallpaper (symlink kept in sync by theme-switch).
@@ -429,139 +423,139 @@ ShellRoot {
                 border.color: root.withAlpha(root.getColor("accent", "#dac76f"), 0.3)
                 visible: root.mediaStatus !== "None"
 
-                    Row {
-                        anchors.fill: parent
-                        anchors.margins: 10
-                        spacing: 12
+                Row {
+                    anchors.fill: parent
+                    anchors.margins: 10
+                    spacing: 12
 
-                        // Album art thumbnail.
-                        Rectangle {
-                            width: 36
-                            height: 36
+                    // Album art thumbnail.
+                    Rectangle {
+                        width: 36
+                        height: 36
+                        radius: 0
+                        color: "transparent"
+                        border.width: 1
+                        border.color: root.withAlpha(root.getColor("accent", "#dac76f"), 0.3)
+
+                        ClippingRectangle {
+                            anchors.fill: parent
+                            anchors.margins: 1
                             radius: 0
                             color: "transparent"
-                            border.width: 1
-                            border.color: root.withAlpha(root.getColor("accent", "#dac76f"), 0.3)
 
-                            ClippingRectangle {
+                            Image {
                                 anchors.fill: parent
-                                anchors.margins: 1
-                                radius: 0
-                                color: "transparent"
-
-                                Image {
-                                    anchors.fill: parent
-                                    anchors.margins: 2
-                                    source: root.mediaArtUrl
-                                    fillMode: Image.PreserveAspectCrop
-                                    smooth: true
-                                    asynchronous: true
-                                    cache: false
-                                    visible: status === Image.Ready && root.mediaArtUrl !== ""
-                                }
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "󰎇"
-                                    font.family: root.fontFamily
-                                    font.pixelSize: 18
-                                    color: root.withAlpha(root.getColor("muted", "#969080"), 0.5)
-                                    visible: root.mediaArtUrl === ""
-                                }
+                                anchors.margins: 2
+                                source: root.mediaArtUrl
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                asynchronous: true
+                                cache: false
+                                visible: status === Image.Ready && root.mediaArtUrl !== ""
                             }
-                        }
-
-                        // Track info.
-                        Column {
-                            anchors.verticalCenter: parent.verticalCenter
-                            spacing: 3
-                            width: parent.width - 134
-
-                            Text {
-                                text: root.mediaTitle || root.mediaName || "Unknown"
-                                font.family: root.fontFamily
-                                font.pixelSize: 12
-                                font.bold: true
-                                color: root.getColor("fg", "#e8e2d4")
-                                elide: Text.ElideRight
-                                width: parent.width
-                            }
-
-                            Text {
-                                text: root.mediaArtist || "Unknown Artist"
-                                font.family: root.fontFamily
-                                font.pixelSize: 10
-                                color: root.withAlpha(root.getColor("muted", "#969080"), 0.9)
-                                elide: Text.ElideRight
-                                width: parent.width
-                            }
-                        }
-
-                        // Play / Pause.
-                        Rectangle {
-                            width: 30
-                            height: 30
-                            radius: 15
-                            color: playMouse.hovered
-                                ? root.withAlpha(root.getColor("accent", "#dac76f"), 0.14)
-                                : "transparent"
-                            border.width: playMouse.hovered ? 1 : 0
-                            border.color: root.withAlpha(root.getColor("accent", "#dac76f"), 0.4)
-                            anchors.verticalCenter: parent.verticalCenter
 
                             Text {
                                 anchors.centerIn: parent
-                                text: root.mediaStatus === "Playing" ? "󰏤" : "󰐊"
+                                text: "󰎇"
                                 font.family: root.fontFamily
-                                font.pixelSize: 13
-                                color: root.getColor("accent", "#dac76f")
-                            }
-
-                            MouseArea {
-                                id: playMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    mediaPlayPauseProc.command = ["/home/oryza/.config/sway/scripts/media-control", "PlayPause"]
-                                    mediaPlayPauseProc.startDetached()
-                                }
+                                font.pixelSize: 18
+                                color: root.withAlpha(root.getColor("muted", "#969080"), 0.5)
+                                visible: root.mediaArtUrl === ""
                             }
                         }
+                    }
 
-                        // Next.
-                        Rectangle {
-                            width: 30
-                            height: 30
-                            radius: 15
-                            color: nextMouse.hovered
-                                ? root.withAlpha(root.getColor("accent", "#dac76f"), 0.14)
-                                : "transparent"
-                            border.width: nextMouse.hovered ? 1 : 0
-                            border.color: root.withAlpha(root.getColor("accent", "#dac76f"), 0.4)
-                            anchors.verticalCenter: parent.verticalCenter
+                    // Track info.
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 3
+                        width: parent.width - 134
 
-                            Text {
-                                anchors.centerIn: parent
-                                text: "󰒭"
-                                font.family: root.fontFamily
-                                font.pixelSize: 13
-                                color: root.getColor("accent", "#dac76f")
+                        Text {
+                            text: root.mediaTitle || root.mediaName || "Unknown"
+                            font.family: root.fontFamily
+                            font.pixelSize: 12
+                            font.bold: true
+                            color: root.getColor("fg", "#e8e2d4")
+                            elide: Text.ElideRight
+                            width: parent.width
+                        }
+
+                        Text {
+                            text: root.mediaArtist || "Unknown Artist"
+                            font.family: root.fontFamily
+                            font.pixelSize: 10
+                            color: root.withAlpha(root.getColor("muted", "#969080"), 0.9)
+                            elide: Text.ElideRight
+                            width: parent.width
+                        }
+                    }
+
+                    // Play / Pause.
+                    Rectangle {
+                        width: 30
+                        height: 30
+                        radius: 15
+                        color: playMouse.hovered
+                            ? root.withAlpha(root.getColor("accent", "#dac76f"), 0.14)
+                            : "transparent"
+                        border.width: playMouse.hovered ? 1 : 0
+                        border.color: root.withAlpha(root.getColor("accent", "#dac76f"), 0.4)
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: root.mediaStatus === "Playing" ? "󰏤" : "󰐊"
+                            font.family: root.fontFamily
+                            font.pixelSize: 13
+                            color: root.getColor("accent", "#dac76f")
+                        }
+
+                        MouseArea {
+                            id: playMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                mediaPlayPauseProc.command = ["/home/oryza/.config/sway/scripts/media-control", "PlayPause"]
+                                mediaPlayPauseProc.startDetached()
                             }
+                        }
+                    }
 
-                            MouseArea {
-                                id: nextMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    mediaNextProc.command = ["/home/oryza/.config/sway/scripts/media-control", "Next"]
-                                    mediaNextProc.startDetached()
-}
+                    // Next.
+                    Rectangle {
+                        width: 30
+                        height: 30
+                        radius: 15
+                        color: nextMouse.hovered
+                            ? root.withAlpha(root.getColor("accent", "#dac76f"), 0.14)
+                            : "transparent"
+                        border.width: nextMouse.hovered ? 1 : 0
+                        border.color: root.withAlpha(root.getColor("accent", "#dac76f"), 0.4)
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "󰒭"
+                            font.family: root.fontFamily
+                            font.pixelSize: 13
+                            color: root.getColor("accent", "#dac76f")
+                        }
+
+                        MouseArea {
+                            id: nextMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                mediaNextProc.command = ["/home/oryza/.config/sway/scripts/media-control", "Next"]
+                                mediaNextProc.startDetached()
+                            }
+                        }
+                    }
                 }
             }
         }
-    }
-}
     }
 }

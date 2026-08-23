@@ -11,8 +11,8 @@ var SETTINGS = {
     osdBorder: true,
     osdShadow: true,
     barFullWidth: false,
-    activeBar: "lonely",
+    activeBar: "fox",
     nightLight: true,
-    nightLightIntensity: 4,
+    nightLightIntensity: 5,
     noiseLevel: 3,
 }

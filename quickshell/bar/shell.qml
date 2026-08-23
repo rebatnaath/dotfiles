@@ -269,16 +269,14 @@ ShellRoot {
         bodyHyperlinksSupported: true
         bodyImagesSupported: true
         onNotification: (notification) => {
-            print("NOTIFY-RECV", notification.appName, "|", notification.summary, "|", notification.body, "|IMG:", notification.image, "|ICON:", notification.appIcon)
             if (root.isDndEnabled) {
                 notification.dismiss()
                 return
             }
             notification.tracked = true
             notification.closed.connect(() => {
-                // A closed notification (auto-dismiss after the OSD timeout,
-                // click-away, etc.) only leaves the transient popup. The
-                // quick-menu history keeps it until the user dismisses/clears it.
+                // A closed notification only leaves the transient popup; the
+                // quick-menu history keeps it until the user dismisses it.
                 for (var p = 0; p < notificationPopupModel.count; p++) {
                     if (notificationPopupModel.get(p).notification === notification) {
                         notificationPopupModel.remove(p)
@@ -286,7 +284,7 @@ ShellRoot {
                     }
                 }
             })
-            notificationListModel.insert(0, {
+            var entry = {
                 notification: notification,
                 appName: notification.appName,
                 summary: notification.summary,
@@ -294,16 +292,9 @@ ShellRoot {
                 image: notification.image,
                 appIcon: notification.appIcon,
                 timestamp: Date.now()
-            })
-            notificationPopupModel.append({
-                notification: notification,
-                appName: notification.appName,
-                summary: notification.summary,
-                body: notification.body,
-                image: notification.image,
-                appIcon: notification.appIcon,
-                timestamp: Date.now()
-            })
+            }
+            notificationListModel.insert(0, entry)
+            notificationPopupModel.append(entry)
         }
     }
 
@@ -507,22 +498,11 @@ ShellRoot {
         root.brightnessLevel = val
     }
 
-    // wpctl set-volume does not unmute a muted sink, so build a command that
-    // unmutes first — otherwise raising the level stays silent.
-    function unmuteAndSetVolumeCommand(levelArg) {
-        return "sh -c wpctl set-mute @DEFAULT_AUDIO_SINK@ 0 || true; wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ " + levelArg
-    }
-
+    // wpctl set-volume does not unmute a muted sink, so unmute first —
+    // otherwise raising the level stays silent.
     function setVolume(val) {
-        volumeStepProc.command = ["sh", "-c", unmuteAndSetVolumeCommand((val / 100).toString())]
-        volumeStepProc.startDetached()
-        volumeRefreshTimer.restart()
-    }
-
-    // Coalesce wheel bursts: accumulate deltas, then apply the whole lot in one
-    // detached (non-blocking) wpctl call so scrolling stays snappy.
-    function volumeStep(dir) {
-        volumeStepProc.command = ["wpctl", "set-volume", "-l", "1", "@DEFAULT_AUDIO_SINK@", dir]
+        volumeStepProc.command = ["sh", "-c",
+            "wpctl set-mute @DEFAULT_AUDIO_SINK@ 0; wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ " + (val / 100)]
         volumeStepProc.startDetached()
         volumeRefreshTimer.restart()
     }
@@ -659,7 +639,8 @@ ShellRoot {
             } else {
                 levelArg = sign > 0 ? "5%+" : "5%-"
             }
-            volumeStepProc.command = ["sh", "-c", unmuteAndSetVolumeCommand(levelArg)]
+            volumeStepProc.command = ["sh", "-c",
+                "wpctl set-mute @DEFAULT_AUDIO_SINK@ 0; wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ " + levelArg]
             volumeStepProc.startDetached()
             volumeRefreshTimer.restart()
         }
@@ -911,6 +892,19 @@ ShellRoot {
 
     // ---- IPC (external control via `quickshell ipc call ...`) -----------
 
+    // Open the quick menu straight to one page (e.g. Super+M -> power).
+    // Toggling the same page again closes the menu.
+    function openQuickMenuPage(pageName): void {
+        var alreadyOpen = root["is" + pageName + "PageOpen"]
+        root.closeAllPages()
+        if (root.isQuickMenuOpen && alreadyOpen) {
+            root.isQuickMenuOpen = false
+            return
+        }
+        root["is" + pageName + "PageOpen"] = true
+        root.isQuickMenuOpen = true
+    }
+
     // Toggle the bar's visibility from a sway keybind (Super+B). Closes the
     // quick menu too so it can't float orphaned above a hidden bar.
     IpcHandler {
@@ -923,23 +917,10 @@ ShellRoot {
             b.visible = !b.visible
         }
 
-        // Open the quick menu straight to one page (external IPC entry points,
-        // e.g. Super+M -> power). Toggling the same page again closes the menu.
-        function openPage(pageName): void {
-            var alreadyOpen = root["is" + pageName + "PageOpen"]
-            root.closeAllPages()
-            if (root.isQuickMenuOpen && alreadyOpen) {
-                root.isQuickMenuOpen = false
-                return
-            }
-            root["is" + pageName + "PageOpen"] = true
-            root.isQuickMenuOpen = true
-        }
-
-        function openPowerMenu(): void { openPage("Power") }
-        function openNotifications(): void { openPage("Notification") }
-        function openClipboard(): void { openPage("Clipboard") }
-        function openSettings(): void { openPage("Settings") }
+        function openPowerMenu(): void { root.openQuickMenuPage("Power") }
+        function openNotifications(): void { root.openQuickMenuPage("Notification") }
+        function openClipboard(): void { root.openQuickMenuPage("Clipboard") }
+        function openSettings(): void { root.openQuickMenuPage("Settings") }
 
         // Hot-reload the palette from colors.js (called by theme-switch after
         // it regenerates the file) — updates the bar's colors in place instead
@@ -956,5 +937,19 @@ ShellRoot {
         }
     }
 
-    Component.onCompleted: { root.pollWifi(); root.pollVolume(); root.pollBattery(); root.pollBrightness(); root.pollGaps(); root.updateWorkspaces(); root.updateClock(); root.pollMedia(); root.pollBluetooth(); if (root.isNightLightEnabled) { nightLightProc.command = [swayScriptsDir + "/nightlight-toggle", "on", root.nightLightIntensity + ""]; nightLightProc.startDetached() } }
+    Component.onCompleted: {
+        root.pollWifi()
+        root.pollVolume()
+        root.pollBattery()
+        root.pollBrightness()
+        root.pollGaps()
+        root.updateWorkspaces()
+        root.updateClock()
+        root.pollMedia()
+        root.pollBluetooth()
+        if (root.isNightLightEnabled) {
+            nightLightProc.command = [swayScriptsDir + "/nightlight-toggle", "on", root.nightLightIntensity + ""]
+            nightLightProc.startDetached()
+        }
+    }
 }

@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+"""Golden-ratio spiral layout for sway.
+
+Rearranges tiled windows on the focused workspace into nested 62/38 splits
+with alternating orientation (regions shrink by phi inward).
+
+Usage: golden-layout [ratio]   (ratio 1-99, default 62)
+"""
+
+import json
+import shlex
+import subprocess
+import sys
+
+RATIO = int(sys.argv[1]) if len(sys.argv) > 1 else 62
+if not 1 <= RATIO <= 99:
+    print("ratio must be 1-99", file=sys.stderr)
+    sys.exit(1)
+
+TMP_WS = "__golden_tmp__"
+
+
+def sway(cmd):
+    return subprocess.run(["swaymsg", *shlex.split(cmd)], capture_output=True, text=True)
+
+
+def notify(msg):
+    subprocess.run(["notify-send", "golden-layout", msg], capture_output=True)
+
+
+def find_focused_workspace(node):
+    """Walk down the focus chain to the workspace containing the focus."""
+    if node["type"] == "workspace":
+        return node
+    # sway's "focus" list holds child node IDs, not positions.
+    by_id = {c["id"]: c for c in node.get("nodes", [])}
+    for fid in node.get("focus", []):
+        child = by_id.get(fid)
+        if child:
+            hit = find_focused_workspace(child)
+            if hit:
+                return hit
+    return None
+
+
+def tiled_leaves(ws):
+    """In-order leaf containers (actual windows) of a workspace."""
+    leaves = []
+
+    def walk(node):
+        for child in node["nodes"]:
+            walk(child)
+        if node["type"] == "con" and not node["nodes"]:
+            leaves.append(node["id"])
+
+    walk(ws)
+    return leaves
+
+
+def main():
+    tree = json.loads(sway("-r -t get_tree").stdout)
+    ws = find_focused_workspace(tree)
+    if not ws:
+        sys.exit(1)
+
+    ids = tiled_leaves(ws)
+    if len(ids) < 2:
+        notify(f"needs 2+ tiled windows (found {len(ids)})")
+        return
+
+    first_focus = ids[0]
+    ws_name = ws["name"]
+
+    # Park extras on a temp workspace (scratchpad would make them floating).
+    for cid in ids[1:]:
+        sway(f"[con_id={cid}] move container to workspace {TMP_WS}")
+
+    # Build root[c1 | [c2 | [c3 | ...]]]: split the focused window, then
+    # pull the next one into the new slot.
+    start = "horizontal" if ws["rect"]["width"] >= ws["rect"]["height"] else "vertical"
+    orients = []
+    for k, cid in enumerate(ids[:-1]):
+        orient = start if k % 2 == 0 else ("vertical" if start == "horizontal" else "horizontal")
+        orients.append(orient)
+        sway(f"[con_id={cid}] focus")
+        sway(f"split {orient}")
+        sway(f"[con_id={ids[k + 1]}] move container to workspace {ws_name}")
+
+    # Ratio pass.
+    dim_of = {"horizontal": "width", "vertical": "height"}
+    for k, cid in enumerate(ids[:-1]):
+        sway(f"[con_id={cid}] focus")
+        sway(f"resize set {dim_of[orients[k]]} {RATIO} ppt")
+
+    sway(f"[con_id={first_focus}] focus")
+    sway(f"[workspace={ws_name}] focus")  # closes the empty temp workspace
+    notify(f"golden spiral applied ({len(ids)} windows, {RATIO}/{100 - RATIO})")
+
+
+if __name__ == "__main__":
+    main()

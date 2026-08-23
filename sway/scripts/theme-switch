@@ -17,12 +17,9 @@ STATE="$HOME/.cache/sway-theme.json"
 CACHE="$HOME/.cache"
 KITTY_CONF="$HOME/.config/kitty/kitty.conf"
 SWAY_THEME="$HOME/.config/sway/theme-colors"
-QS_PICKER="$HOME/.config/quickshell/wallpaper-picker"
-QS_COLORS="$QS_PICKER/colors.js"
+# single copy of the quickshell palette; other instances import it from here
 QS_BAR="$HOME/.config/quickshell/bar"
 QS_COLORS_BAR="$QS_BAR/colors.js"
-QS_POWER="$HOME/.config/quickshell/powermenu"
-QS_COLORS_POWER="$QS_POWER/colors.js"
 ROFI_THEME="$HOME/.config/rofi/theme.rasi"
 GTK3_CSS="$HOME/.config/gtk-3.0/gtk.css"
 GTK4_CSS="$HOME/.config/gtk-4.0/gtk.css"
@@ -31,7 +28,7 @@ BLE_THEME="$HOME/.config/blesh/init.sh"
 FOX_CHROME="$HOME/.config/mozilla/firefox/evdp80ux.default-release/chrome"
 FOX_UC="$FOX_CHROME/userChrome.css"
 FOX_CONTENT="$FOX_CHROME/userContent.css"
-mkdir -p "$QS_PICKER" "$QS_BAR" "$QS_POWER" "$(dirname "$ROFI_THEME")" "$(dirname "$SWAY_THEME")" "$(dirname "$GTK3_CSS")" "$(dirname "$GTK4_CSS")" "$(dirname "$FISH_THEME")" "$(dirname "$BLE_THEME")" "$(dirname "$FOX_UC")"
+mkdir -p "$QS_BAR" "$(dirname "$ROFI_THEME")" "$(dirname "$SWAY_THEME")" "$(dirname "$GTK3_CSS")" "$(dirname "$GTK4_CSS")" "$(dirname "$FISH_THEME")" "$(dirname "$BLE_THEME")" "$(dirname "$FOX_UC")"
 MONITOR="${MONITOR:-eDP-1}"
 
 # NERV mode: if the active bar is the nerv bar, force a fixed red theme instead
@@ -122,7 +119,7 @@ if ! "${MATUGEN[@]}" image "$WALL" -m "$mode" --prefer "$prefer" --json hex > "$
 fi
 
 # ---- 3) write kitty.conf, theme-colors.lua, picker colors.js and the state file ----
-KITTY_CONF="$KITTY_CONF" SWAY_THEME="$SWAY_THEME" QS_COLORS="$QS_COLORS" QS_COLORS_BAR="$QS_COLORS_BAR" QS_COLORS_POWER="$QS_COLORS_POWER" ROFI_THEME="$ROFI_THEME" GTK3_CSS="$GTK3_CSS" GTK4_CSS="$GTK4_CSS" FISH_THEME="$FISH_THEME" BLE_THEME="$BLE_THEME" FOX_UC="$FOX_UC" FOX_CONTENT="$FOX_CONTENT" \
+KITTY_CONF="$KITTY_CONF" SWAY_THEME="$SWAY_THEME" QS_COLORS_BAR="$QS_COLORS_BAR" ROFI_THEME="$ROFI_THEME" GTK3_CSS="$GTK3_CSS" GTK4_CSS="$GTK4_CSS" FISH_THEME="$FISH_THEME" BLE_THEME="$BLE_THEME" FOX_UC="$FOX_UC" FOX_CONTENT="$FOX_CONTENT" \
 STATE="$STATE" MODE="$mode" WALL="$WALL" MATUGEN_JSON="$CACHE/matugen.json" NERV="$NERV" \
 python3 - <<'PY'
 import json, os
@@ -262,11 +259,7 @@ var COLORS = {{
     muted: "#{outline}",
 }}
 """.format(bg=bg, fg=fg, primary=primary, secondary=secondary, s_variant=s_variant, outline=outline)
-with open(os.environ["QS_COLORS"], "w") as f:
-    f.write(qs_colors)
 with open(os.environ["QS_COLORS_BAR"], "w") as f:
-    f.write(qs_colors)
-with open(os.environ["QS_COLORS_POWER"], "w") as f:
     f.write(qs_colors)
 
 # rofi theme (colors follow the wallpaper)
