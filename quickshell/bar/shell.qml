@@ -9,7 +9,7 @@ import "windows"
 import "fox"
 import "lonely"
 import "nerv"
-
+import "lain"
 ShellRoot {
     id: root
 
@@ -194,6 +194,23 @@ ShellRoot {
         return Qt.rgba(r / 255, g / 255, b / 255, alpha)
     }
 
+    // Relative-luminance of a #rrggbb string.
+    function luminance(colorHex) {
+        var r = parseInt(colorHex.substring(1, 3), 16) / 255
+        var g = parseInt(colorHex.substring(3, 5), 16) / 255
+        var b = parseInt(colorHex.substring(5, 7), 16) / 255
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b
+    }
+
+    // Darkest of the live palette colors (used by the lain bar background).
+    readonly property string darkestColor: {
+        var best = colorBg
+        var cands = [colorBg, colorFg, colorAccent, colorSecondary, colorSurfaceVariant, colorMuted]
+        for (var i = 1; i < cands.length; i++)
+            if (luminance(cands[i]) < luminance(best)) best = cands[i]
+        return best
+    }
+
     // Blend two hex colors into an opaque color. amount is how much of the
     // second color (e.g. accent) is mixed into the first (e.g. bg).
     function mixHex(baseHex, accentHex, amount) {
@@ -227,6 +244,8 @@ ShellRoot {
     property int wheelAccum: 0
     property string dateText: ""
     property string timeText: ""
+    // "22 aug 11:55" style stamp for the lain status group.
+    property string dateTimeText: ""
     property string windowTitle: ""
     property string mediaStatus: "None"
     property string mediaName: ""
@@ -244,6 +263,8 @@ ShellRoot {
     property bool isWallpaperPageOpen: false
     property bool isClipboardPageOpen: false
     property bool isSettingsPageOpen: false
+    // lain power-menu overlay (shared by the control center + sidebar)
+    property bool lainPowerOpen: false
     onIsQuickMenuOpenChanged: if (!isQuickMenuOpen) root.closeAllPages()
 
     function closeAllPages() {
@@ -454,6 +475,7 @@ ShellRoot {
         root.dateText = d.getDate() + "-" + months[d.getMonth()] + "-" + String(d.getFullYear()).slice(-2)
         var h = d.getHours(), m = d.getMinutes()
         root.timeText = (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m
+        root.dateTimeText = d.getDate() + " " + months[d.getMonth()] + " " + root.timeText
     }
 
     function pollMedia() {
@@ -779,15 +801,32 @@ ShellRoot {
     Component { id: foxBarComp; BarWindow {} }
     Component { id: lonelyBarComp; LonelyBar {} }
     Component { id: nervBarComp; NervBar {} }
+    Component { id: lainBarComp; LainBar {} }
 
     // Full-screen NERV backdrop (black + red rounded frame). Shown only while
     // the nerv bar is active; sits behind windows so clicks pass through.
     NervFrame {}
 
+    // Lain-mode left sidebar (entries + power off), lain bar only.
+    LainSidebar {}
+
+    // Invisible spacer reserving the top strip for the lain bar: sway only
+    // honours exclusive zones on TOP-anchored surfaces, and the lain bar
+    // itself is TOP|RIGHT so it can span over the sidebar's zone.
+    PanelWindow {
+        visible: root.activeBar === "lain"
+        color: "transparent"
+        exclusionMode: ExclusionMode.Auto
+        anchors { top: true; left: true; right: true }
+        implicitHeight: 38 * root.uiScale
+        mask: Region {}
+    }
+
     Loader {
         id: barLoader
         sourceComponent: root.activeBar === "lonely" ? lonelyBarComp
-                      : root.activeBar === "nerv" ? nervBarComp : foxBarComp
+                      : root.activeBar === "nerv" ? nervBarComp
+                      : root.activeBar === "lain" ? lainBarComp : foxBarComp
         property alias bar: barLoader.item
     }
 
@@ -883,6 +922,15 @@ ShellRoot {
     QuickMenu {
         id: quickMenu
     }
+
+    // Lain-themed replacement for the quick menu.
+    LainControlCenter {}
+
+    // Nerv-themed replacement for the quick menu.
+    NervControlCenter {}
+
+    // Lain-themed OSD (bottom-centred strip).
+    LainOsd {}
 
     NotificationPopup { cardWidth: osdWindow.cardWidth }
 

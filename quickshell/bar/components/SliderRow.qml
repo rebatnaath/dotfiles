@@ -104,7 +104,7 @@ Row {
             onPositionChanged: (mouse) => {
                 if (pressed) sliderRow.valuePreviewed(percentageAt(mouse.x))
             }
-            onReleased: {
+            onReleased: (mouse) => {
                 sliderRow.isDragging = false
                 sliderRow.valueCommitted(percentageAt(mouse.x))
             }

@@ -27,12 +27,21 @@ PanelWindow {
     property real borderThickness: 4 * root.uiScale
     property bool showBorder: root.barBorder
     property bool showShadow: root.barShadow && !root.barFullWidth
+    // Which screen edge the bar docks to; a variant can pin its own side
+    // (e.g. lain is always top) independent of the global barSide setting.
+    property string side: root.barSide
+    // Anchor the left edge. Variants that must span the true full width
+    // (over other layers' left-side exclusive zones, e.g. lain over its
+    // sidebar) turn this off and set faceWidth instead.
+    property bool anchorLeft: true
+    // Explicit window width when anchorLeft is off (-1 = stretch to anchors).
+    property real faceWidth: -1
     // Side margin: floats the bar inset from the screen edge (kept even with
     // the shadow off); full-width mode sits flush against the edge.
     property real sideInset: root.barFullWidth ? 0 : root.barSideMargin
     // Vertical margins: clear of the screen edge when not full-width.
-    property real marginTop: (root.barSide === "top" && !root.barFullWidth ? 9 : 0) * root.uiScale
-    property real marginBottom: (root.barSide === "bottom" && !root.barFullWidth ? 9 : 0) * root.uiScale
+    property real marginTop: (side === "top" && !root.barFullWidth ? 9 : 0) * root.uiScale
+    property real marginBottom: (side === "bottom" && !root.barFullWidth ? 9 : 0) * root.uiScale
 
     default property alias content: contentArea.data
 
@@ -42,10 +51,10 @@ PanelWindow {
     property alias faceLayer: face
     property alias borderLayer: border
 
-    // 46px face + 8px shadow room; the window hugs the face on the leading
-    // side so it wastes little screen space.
-    implicitHeight: barFace.faceHeight + 8 * root.uiScale
-    anchors { left: true; right: true; bottom: root.barSide === "bottom"; top: root.barSide === "top" }
+    // Face height + 8px shadow room when one is shown.
+    implicitHeight: barFace.faceHeight + (barFace.showShadow ? 8 : 0) * root.uiScale
+    implicitWidth: barFace.faceWidth
+    anchors { left: anchorLeft; right: true; bottom: side === "bottom"; top: side === "top" }
     color: "transparent"
     aboveWindows: true
     exclusionMode: ExclusionMode.Auto
@@ -66,7 +75,7 @@ PanelWindow {
         color: "#000000"
         blur: 0
         spread: 0
-        offset: root.barSide === "top" ? Qt.vector2d(8 * root.uiScale, -8 * root.uiScale) : Qt.vector2d(8 * root.uiScale, 8 * root.uiScale)
+        offset: barFace.side === "top" ? Qt.vector2d(8 * root.uiScale, -8 * root.uiScale) : Qt.vector2d(8 * root.uiScale, 8 * root.uiScale)
         visible: barFace.showShadow
     }
 
@@ -76,15 +85,15 @@ PanelWindow {
         radius: root.frameRadius
         color: barFace.faceColor
 
-        // Anchored to the trailing edge with an 8px gap so the offset shadow
-        // has room; the leading edge sits flush against content.
+        // Anchored to the trailing edge with an 8px gap for the shadow when
+        // one is shown; flush otherwise.
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.rightMargin: (root.barFullWidth ? 0 : 8) * root.uiScale
-        anchors.top: root.barSide === "top" ? parent.top : undefined
-        anchors.topMargin: (root.barSide === "top" && !root.barFullWidth ? 8 : 0) * root.uiScale
-        anchors.bottom: root.barSide === "bottom" ? parent.bottom : undefined
-        anchors.bottomMargin: (root.barSide === "bottom" && !root.barFullWidth ? 8 : 0) * root.uiScale
+        anchors.rightMargin: (barFace.showShadow && !root.barFullWidth ? 8 : 0) * root.uiScale
+        anchors.top: barFace.side === "top" ? parent.top : undefined
+        anchors.topMargin: (barFace.side === "top" && barFace.showShadow && !root.barFullWidth ? 8 : 0) * root.uiScale
+        anchors.bottom: barFace.side === "bottom" ? parent.bottom : undefined
+        anchors.bottomMargin: (barFace.side === "bottom" && barFace.showShadow && !root.barFullWidth ? 8 : 0) * root.uiScale
 
         // Bar-unique content. Drawn before the border ring so a variant that
         // extends fills to the face edges (e.g. lonely) still shows the border

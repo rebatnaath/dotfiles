@@ -2,9 +2,9 @@
 .pragma library
 var COLORS = {
     bg: "#1a1110",
-    fg: "#f1dedc",
-    accent: "#ffb4ab",
-    secondary: "#e7bdb8",
+    fg: "#f1dfdb",
+    accent: "#ffb4a8",
+    secondary: "#e7bdb6",
     surface_variant: "#534341",
-    muted: "#a08c8a",
+    muted: "#a08c89",
 }

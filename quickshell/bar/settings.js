@@ -1,6 +1,6 @@
 .pragma library
 var SETTINGS = {
-    borderWidth: 4,
+    borderWidth: 3,
     cornerRadius: 0,
     barSide: "bottom",
     fontFamily: "GeistMono NFM",
@@ -11,8 +11,8 @@ var SETTINGS = {
     osdBorder: true,
     osdShadow: true,
     barFullWidth: false,
-    activeBar: "fox",
-    nightLight: true,
-    nightLightIntensity: 5,
-    noiseLevel: 3,
+    activeBar: "lain",
+    nightLight: false,
+    nightLightIntensity: 0,
+    noiseLevel: 0,
 }

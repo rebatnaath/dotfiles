@@ -13,10 +13,10 @@ PanelWindow {
     color: "transparent"
     aboveWindows: true
     exclusionMode: ExclusionMode.Ignore
-    // Pop up in the top-right corner (beside the top bar) when the bar sits on
-    // top, when the bar is full-width, or nerv mode is active, bottom-right
+    // Pop up in the top-right corner (below the bar) when the bar sits on
+    // top, when the bar is full-width, or in nerv/lain mode; bottom-right
     // otherwise.
-    readonly property bool atTop: (root.activeBar === "nerv"
+    readonly property bool atTop: (root.activeBar === "nerv" || root.activeBar === "lain"
         || root.barSide === "top" || root.barFullWidth)
     anchors {
         top: atTop
@@ -24,13 +24,16 @@ PanelWindow {
         right: true
     }
     margins {
-        top: atTop ? (root.activeBar === "nerv" ? 36 * root.uiScale : (root.barFullWidth ? 62 * root.uiScale : 9 * root.uiScale)) : 0
+        top: atTop ? (root.activeBar === "nerv" ? 36 * root.uiScale
+            : (root.activeBar === "lain" ? 42 * root.uiScale
+            : (root.barFullWidth ? 62 * root.uiScale : 9 * root.uiScale))) : 0
         bottom: atTop ? 0 : 9 * root.uiScale
         right: (root.activeBar === "nerv" ? (root.windowGap + 8) : root.windowGap) * root.uiScale
     }
     implicitWidth: osdCard.implicitWidth
     implicitHeight: osdCard.implicitHeight + 8
-    visible: osdCard.opacity > 0
+    // lain has its own OSD (lain/LainOsd.qml)
+    visible: osdCard.opacity > 0 && root.activeBar !== "lain"
 
     FileView {
         id: osdStateFile

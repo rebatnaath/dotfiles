@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell.Io
 
 // Scrollable settings page: edit the rice-wide visual tokens. Edits the shell
 // root's reactive properties for instant feedback, then persists via
@@ -10,6 +11,19 @@ Flickable {
     boundsBehavior: Flickable.StopAtBounds
     contentWidth: width
     contentHeight: contentColumn.height
+
+    // Lain mode has no bar visuals of its own yet (falls back to fox);
+    // switching to it applies a random wallpaper from the lain collection.
+    Process {
+        id: lainWallpaperProc
+    }
+
+    function applyLainWallpaper() {
+        lainWallpaperProc.command = ["bash", "-c",
+            "wall=$(find \"$HOME/nixConfig/assets/walls/lain\" -type f | shuf -n 1); " +
+            "$HOME/.config/sway/scripts/theme-switch --fast \"$wall\""]
+        lainWallpaperProc.startDetached()
+    }
 
     Column {
         id: contentColumn
@@ -153,7 +167,7 @@ Flickable {
             spacing: 10 * root.uiScale
 
             PillButton {
-                width: (parent.width - 20) / 3
+                width: (parent.width - 30) / 4
                 labelText: "Fox"
                 isChecked: root.activeBar === "fox"
                 onClicked: {
@@ -163,7 +177,7 @@ Flickable {
             }
 
             PillButton {
-                width: (parent.width - 20) / 3
+                width: (parent.width - 30) / 4
                 labelText: "Lonely"
                 isChecked: root.activeBar === "lonely"
                 onClicked: {
@@ -173,12 +187,23 @@ Flickable {
             }
 
             PillButton {
-                width: (parent.width - 20) / 3
+                width: (parent.width - 30) / 4
                 labelText: "Nerv"
                 isChecked: root.activeBar === "nerv"
                 onClicked: {
                     root.activeBar = "nerv"
                     root.saveRiceSettings()
+                }
+            }
+
+            PillButton {
+                width: (parent.width - 30) / 4
+                labelText: "Lain"
+                isChecked: root.activeBar === "lain"
+                onClicked: {
+                    root.activeBar = "lain"
+                    root.saveRiceSettings()
+                    settingsPage.applyLainWallpaper()
                 }
             }
         }
