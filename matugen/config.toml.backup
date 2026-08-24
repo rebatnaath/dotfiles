@@ -1,0 +1,17 @@
+[config]
+version_check = false
+prefer = "darkness"
+fallback_color = "#3B404C"
+caching = false
+contrast = 0.1
+
+[templates.waybar]
+input_path = "/home/oryza/.config/matugen/templates/waybar.css"
+output_path = "/home/oryza/.cache/matugen/waybar.css"
+type = "SchemeTonalSpot"
+post_hook = "pkill waybar 2>/dev/null; sleep 0.3; waybar >/dev/null 2>&1 &"
+
+[templates.kitty]
+input_path = "/home/oryza/.config/matugen/templates/kitty.conf"
+output_path = "/home/oryza/.cache/matugen/kitty.conf"
+post_hook = "pkill -USR1 -x kitty 2>/dev/null; true &"

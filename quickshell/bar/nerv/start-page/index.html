@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NERV :: new tab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0a;
+    --panel:#0d0d0d;
+    --red:#c8202a;
+    --red-dim:#7a1319;
+    --orange:#ff9a1f;
+    --cyan:#5fc4dc;
+    --green:#63d98b;
+    --text:#c9c9c2;
+    --text-dim:#7d7d76;
+    --white:#f2f2ec;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg);
+    font-family:'JetBrains Mono',monospace;
+    color:var(--text);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:24px;
+    position:relative;
+    overflow:hidden;
+  }
+  body::before{
+    content:"";
+    position:fixed;inset:0;
+    background:radial-gradient(circle at 50% 30%, rgba(200,32,42,0.07), transparent 55%);
+    pointer-events:none;
+  }
+  .logo-mark{
+    font-family:'Noto Sans JP',sans-serif;
+    font-weight:700;
+    color:var(--red);
+    font-size:15px;
+    letter-spacing:6px;
+    margin-bottom:6px;
+  }
+  .clock{
+    font-size:64px;
+    font-weight:700;
+    color:var(--white);
+    letter-spacing:2px;
+    line-height:1;
+  }
+  .date{
+    margin-top:8px;
+    font-size:13px;
+    color:var(--orange);
+    letter-spacing:1px;
+  }
+  .date span{color:var(--text-dim);}
+
+  .search-wrap{
+    width:min(560px,90vw);
+    margin-top:34px;
+    border:1px solid var(--red);
+    border-radius:4px;
+    background:var(--panel);
+    display:flex;
+    align-items:center;
+    padding:0 14px;
+  }
+  .search-wrap .prompt{color:var(--green);font-size:14px;padding-right:8px;}
+  .search-wrap input{
+    flex:1;
+    background:transparent;
+    border:none;
+    outline:none;
+    color:var(--white);
+    font-family:'JetBrains Mono',monospace;
+    font-size:14px;
+    padding:12px 0;
+  }
+  .search-wrap input::placeholder{color:var(--text-dim);}
+  .search-wrap .kbd{
+    font-size:10px;
+    color:var(--text-dim);
+    border:1px solid var(--red-dim);
+    border-radius:3px;
+    padding:2px 6px;
+  }
+
+  .links{
+    display:flex;
+    gap:12px;
+    margin-top:26px;
+    flex-wrap:wrap;
+    justify-content:center;
+    width:min(560px,90vw);
+  }
+  .link-tile{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    width:74px;
+    padding:10px 4px;
+    border:1px solid var(--red-dim);
+    border-radius:4px;
+    color:var(--text);
+    text-decoration:none;
+    font-size:10.5px;
+    letter-spacing:0.5px;
+    transition:border-color .15s, color .15s, background .15s;
+  }
+  .link-tile:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(95,196,220,0.06);}
+  .link-tile .glyph{
+    width:16px;height:16px;
+    background:var(--red-dim);
+    clip-path:polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+  }
+  .link-tile:hover .glyph{background:var(--cyan);}
+
+  .status-strip{
+    margin-top:34px;
+    width:min(560px,90vw);
+    border:1px solid var(--red);
+    border-radius:4px;
+    background:var(--panel);
+    display:flex;
+  }
+  .stat{
+    flex:1;
+    padding:10px 12px;
+    border-right:1px solid var(--red-dim);
+    font-size:10.5px;
+  }
+  .stat:last-child{border-right:none;}
+  .stat .k{color:var(--text-dim);display:block;margin-bottom:3px;letter-spacing:0.5px;}
+  .stat .v{color:var(--white);font-size:12px;}
+  .stat .v.orange{color:var(--orange);}
+  .stat .v.cyan{color:var(--cyan);}
+  .stat .v.green{color:var(--green);}
+
+  .footer-tag{
+    position:fixed;
+    bottom:16px;
+    right:20px;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    font-size:10px;
+    color:var(--text-dim);
+  }
+  .footer-tag .jp{
+    font-family:'Noto Sans JP',sans-serif;
+    color:var(--red);
+    font-size:13px;
+    font-weight:700;
+  }
+</style>
+</head>
+<body>
+
+  <div class="logo-mark">NERV</div>
+  <div class="clock" id="clock">00:00:00</div>
+  <div class="date" id="date">weekday <span>·</span> yyyy.mm.dd</div>
+
+  <div class="search-wrap">
+    <span class="prompt">&gt;</span>
+    <input id="search" type="text" placeholder="search magi_sys..." autofocus>
+    <span class="kbd">ENTER</span>
+  </div>
+
+  <div class="links">
+    <a class="link-tile" href="https://github.com"><span class="glyph"></span>github</a>
+    <a class="link-tile" href="https://mail.google.com"><span class="glyph"></span>mail</a>
+    <a class="link-tile" href="https://youtube.com"><span class="glyph"></span>youtube</a>
+    <a class="link-tile" href="https://search.nixos.org"><span class="glyph"></span>nixpkgs</a>
+    <a class="link-tile" href="https://reddit.com"><span class="glyph"></span>reddit</a>
+    <a class="link-tile" href="https://news.ycombinator.com"><span class="glyph"></span>hn</a>
+  </div>
+
+  <div class="status-strip">
+    <div class="stat"><span class="k">uptime</span><span class="v orange" id="uptime">--</span></div>
+    <div class="stat"><span class="k">battery</span><span class="v">87%</span></div>
+    <div class="stat"><span class="k">net</span><span class="v cyan">linked</span></div>
+    <div class="stat"><span class="k">sync rate</span><span class="v green">98.7%</span></div>
+  </div>
+
+  <div class="footer-tag">
+    <span class="jp">情報</span>
+    <span>nerv@hq :: new-tab</span>
+  </div>
+
+<script>
+  function pad(n){ return n.toString().padStart(2,'0'); }
+
+  function tick(){
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+
+    const days = ['sun','mon','tue','wed','thu','fri','sat'];
+    document.getElementById('date').innerHTML =
+      days[now.getDay()] + ' <span>·</span> ' +
+      now.getFullYear() + '.' + pad(now.getMonth()+1) + '.' + pad(now.getDate());
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  const start = Date.now();
+  function tickUptime(){
+    const s = Math.floor((Date.now() - start) / 1000);
+    const h = Math.floor(s/3600);
+    const m = Math.floor((s%3600)/60);
+    const sec = s%60;
+    document.getElementById('uptime').textContent = pad(h)+'h '+pad(m)+'m '+pad(sec)+'s';
+  }
+  setInterval(tickUptime, 1000);
+
+  document.getElementById('search').addEventListener('keydown', function(e){
+    if(e.key === 'Enter' && this.value.trim() !== ''){
+      window.location.href = 'https://www.google.com/search?q=' + encodeURIComponent(this.value.trim());
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,35 @@
+{
+    "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+    // lain theme -- present day, present time.
+    // The logo is image/lain.png tinted with the live wallpaper palette by
+    // tint-logo.sh (re-run by theme-switch on every retheme).
+    "logo": {
+        "type": "kitty",
+        "source": "~/.cache/fastfetch-lain-tinted.png",
+        "width": 26,
+        "padding": { "top": 0, "right": 3 }
+    },
+    "display": {
+        "constants": ["  "],
+        "separator": " ",
+        "key": { "width": 6 }
+    },
+    "colors": { "keys": "white" },
+    "modules": [
+        "break",
+        "break",
+        "break",
+        "break",
+        { "type": "os", "key": "os", "keyColor": "38;5;216", "format": "{name} {version-id}" },
+        { "type": "kernel", "key": "ker", "keyColor": "38;5;245", "format": "{release}" },
+        {
+            "type": "command",
+            "key": "pkgs",
+            "keyColor": "38;5;216",
+            "text": "cnt() { awk '/(home\\.packages|environment\\.systemPackages|users\\.oryza\\.packages) = / || /^[[:space:]]*packages = with pkgs/ {p=1; next} p && /^[[:space:]]*]/ {p=0; next} p && /^[[:space:]]*[a-zA-Z0-9_.+*-]+/ {gsub(/[ ,]/,\"\",$0); if ($0!=\"\" && $0!~/inputs\\./ && $0!~/\\$/) c++} END {print c+0}' \"$1\"; }; s=$(cnt ~/nixConfig/hosts/nixos/configuration.nix); h=$(cnt ~/nixConfig/hosts/nixos/home.nix); printf '%s sys / %s user' \"$s\" \"$h\""
+        },
+        { "type": "wm", "key": "wm", "keyColor": "38;5;245" },
+        { "type": "command", "key": "ram", "keyColor": "38;5;210", "text": "free -m | awk 'NR==2 {print $3 \" / \" $2 \" MB\"}'" },
+        { "type": "command", "key": "up", "keyColor": "38;5;245", "text": "awk '{printf \"%d min\", $1/60}' /proc/uptime" }
+    ]
+}
