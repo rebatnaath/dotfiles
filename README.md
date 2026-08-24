@@ -5,6 +5,11 @@ dotfiles, I'm posting them here. I'd like to be helpful, and some of you might
 be new to this kind of thing (or not), so that's why the README is a bit
 detailed. Don't cringe on me, please.
 
+> **⚠️ STOP — read this first:** if you're new and don't know what you're
+> doing, turn back now. This setup **has bugs** (see the note below) and is
+> actively being worked on. Please only proceed if you know what you're doing,
+> until I fix things myself.
+
 > **Important:** a few of these configurations might work, might not; there
 > could be bugs and what-not. It works on *my* system, but I don't know about
 > yours. It was only tested on a single-monitor 1920x1080 display; no idea about
