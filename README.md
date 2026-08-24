@@ -181,18 +181,103 @@ the `WALLS` path in these two files:
 
 This `~/.config`-managed rice targets my NixOS desktop; the full package list
 lives in the [nixConfig](https://github.com/rebatnaath/nixConfig) flake. This
-repo holds only the configs themselves. On a non-NixOS distro you'll want at
-least:
+repo holds only the configs themselves. On a non-NixOS distro you'll want:
 
-- **SwayFX** (or sway) with XWayland
+- **SwayFX** (or sway) with XWayland — blur/shadows/animations need SwayFX;
+  plain sway works but ignores those options
 - **Quickshell** for the bar, OSD, notifications, picker and lockscreen
 - **matugen** to derive the colour scheme from your wallpaper
 - **swaybg** (wallpaper) and **swayidle** (auto-lock)
 - **grim** + **slurp** (screenshots), **wl-clipboard** (clipboard)
 - **cliphist** (clipboard history), **wl-screenrec** (recording)
 - **brightnessctl**, **wireplumber**, **libnotify**, **playerctl**
+- **wlsunset** (night light toggle)
+- **NetworkManager** (`nmcli`) and **bluez** (`bluetoothctl`) for the wifi /
+  bluetooth toggles in the control center
+- **python 3** and **jq** used by `wall-pick` / `theme-switch`
 - **ImageMagick** for wallpaper thumbnails and the lock-screen blur
-- **kitty** (default terminal) and **rofi** (app launcher)
+- **kitty** (default terminal), **rofi** (app launcher) and **nautilus**
+  (file manager keybind)
+- **imv** (image viewer; has its own titlebar rule)
+
+### Install commands
+
+<details open>
+<summary><b>Arch / EndeavourOS</b></summary>
+
+Everything is in the official repos except SwayFX (AUR):
+
+```sh
+sudo pacman -S --needed \
+  quickshell matugen imv swaybg swayidle swaylock \
+  grim slurp wl-clipboard cliphist wl-screenrec wlsunset \
+  brightnessctl wireplumber libnotify playerctl \
+  networkmanager bluez bluez-utils python jq \
+  imagemagick kitty rofi nautilus fastfetch
+
+# SwayFX is in the AUR (plain `sway` also works, minus blur/animations):
+paru -S swayfx   # or yay -S swayfx
+```
+
+</details>
+
+<details>
+<summary><b>Fedora</b></summary>
+
+```sh
+sudo dnf install \
+  quickshell matugen imv swaybg swayidle swaylock \
+  grim slurp wl-clipboard cliphist wl-screenrec wlsunset \
+  brightnessctl wireplumber libnotify playerctl \
+  NetworkManager bluez python3 jq \
+  ImageMagick kitty rofi nautilus fastfetch
+```
+
+SwayFX isn't in the official repos — enable the COPR (or the Terra repo):
+
+```sh
+sudo dnf copr enable swayfx/swayfx
+sudo dnf install swayfx
+```
+
+On Fedora releases older than 44, `matugen` may not be available yet; get it
+from the [errornointernet/quickshell](https://copr.fedorainfracloud.org/coprs/errornointernet/quickshell/)
+companion repos or `cargo install matugen`.
+
+</details>
+
+<details>
+<summary><b>Debian 13+ / Ubuntu</b></summary>
+
+```sh
+sudo apt install \
+  sway sway-bg swayidle swaylock \
+  grim slurp wl-clipboard cliphist wlsunset \
+  brightnessctl wireplumber libnotify-bin playerctl \
+  network-manager bluez python3 jq \
+  imagemagick kitty rofi nautilus fastfetch
+```
+
+Not packaged on Debian, install separately:
+
+```sh
+# quickshell: in testing/unstable (trixie-backports on stable),
+# or the DankLinux OBS repo:
+curl -fsSL https://download.opensuse.org/repositories/home:AvengeMedia:danklinux/Debian_13/Release.key | \
+  sudo gpg --dearmor -o /etc/apt/keyrings/danklinux.gpg
+echo "deb [signed-by=/etc/apt/keyrings/danklinux.gpg] https://download.opensuse.org/repositories/home:/AvengeMedia:/danklinux/Debian_13/ /" | \
+  sudo tee /etc/apt/sources.list.d/danklinux.list
+sudo apt update && sudo apt install quickshell
+
+# matugen + wl-screenrec via cargo:
+sudo apt install cargo && cargo install matugen wl-screenrec
+
+# imv: build from source or grab a release binary
+# SwayFX: no package — build from source (needs meson/ninja + wlroots/scenefx),
+# or stick with plain sway (blur/animations won't apply).
+```
+
+</details>
 
 See the [nixConfig](https://github.com/rebatnaath/nixConfig) readme for the
 full dependency list.
