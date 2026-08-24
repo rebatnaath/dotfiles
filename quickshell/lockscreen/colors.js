@@ -1,1 +1,1 @@
-/home/oryza/.config/quickshell/bar/colors.js
+../bar/colors.js
