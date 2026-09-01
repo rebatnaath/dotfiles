@@ -10,7 +10,7 @@ case ":$PATH:" in
   *) PATH="/etc/profiles/per-user/$USER/bin:$PATH" ;;
 esac
 
-WALLS="${WALLS_DIR:-$HOME/nixConfig/assets/walls}"
+WALLS="${WALLS_DIR:-$HOME/.config/sway/walls}"
 QS_CONF="$HOME/.config/quickshell/wallpaper-picker"
 QS_BIN="$(command -v quickshell 2>/dev/null || true)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

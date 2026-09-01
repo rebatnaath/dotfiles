@@ -173,26 +173,9 @@ ln -sf ~/dotfiles/fastfetch ~/.config/fastfetch
 
 ## Wallpapers
 
-The wallpaper directory is **not part of this repo**; it lives in
-[nixConfig](https://github.com/rebatnaath/nixConfig)`/assets/walls`. After
-cloning/symlinking, point the scripts at your own wallpaper folder by editing
-the `WALLS` path in these two files:
-
-- `sway/scripts/wall-pick`: change the `WALLS` line to your wallpaper
-  directory (or export a `WALLS_DIR` env var instead):
-
-  ```sh
-  WALLS="${WALLS_DIR:-$HOME/nixConfig/assets/walls}"
-  ```
-
-- `sway/scripts/theme-switch`: update the `NERV_WALL` fallback defaults and
-  the restore-image path to your own images:
-
-  ```sh
-  NERV_WALL="$HOME/nixConfig/assets/walls/eva/main.png"
-  [[ -f "$NERV_WALL" ]] || NERV_WALL="$HOME/nixConfig/assets/walls/sand-dune.jpg"
-  update_wall_link "$HOME/nixConfig/assets/walls/sand-dune.jpg"
-  ```
+Wallpapers are included in this repo under `sway/walls/`. The wallpaper picker
+(`Super+W`) will show them automatically. To add your own wallpapers, place
+them in `sway/walls/` and they'll appear in the picker.
 
 ## Requirements
 

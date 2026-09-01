@@ -47,8 +47,8 @@ NERV=0
 [[ "$activeBar" == "nerv" ]] && NERV=1
 # Fixed NERV backdrop shown whenever the nerv bar is active, so the red theme
 # and the EVA wallpaper stay together regardless of any stored selection.
-NERV_WALL="$HOME/nixConfig/assets/walls/eva/main.png"
-[[ -f "$NERV_WALL" ]] || NERV_WALL="$HOME/nixConfig/assets/walls/sand-dune.jpg"
+NERV_WALL="$HOME/.config/sway/walls/eva/main.png"
+[[ -f "$NERV_WALL" ]] || NERV_WALL="$HOME/.config/sway/walls/sand-dune.jpg"
 
 # Keep a stable symlink at ~/.cache/current-wallpaper pointing at the active
 # wallpaper. The sway config's `output * bg` line references this path, so the
@@ -91,7 +91,7 @@ if [[ -z "$WALL" ]]; then
         if [[ "$NERV" == "1" ]]; then
             update_wall_link "$NERV_WALL"
         else
-            update_wall_link "$HOME/nixConfig/assets/walls/sand-dune.jpg"
+            update_wall_link "$HOME/.config/sway/walls/sand-dune.jpg"
         fi
         exit 0
     fi
