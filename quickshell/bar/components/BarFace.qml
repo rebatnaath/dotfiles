@@ -28,11 +28,10 @@ PanelWindow {
     property bool showBorder: root.barBorder
     property bool showShadow: root.barShadow && !root.barFullWidth
     // Which screen edge the bar docks to; a variant can pin its own side
-    // (e.g. lain is always top) independent of the global barSide setting.
+    // independent of the global barSide setting.
     property string side: root.barSide
     // Anchor the left edge. Variants that must span the true full width
-    // (over other layers' left-side exclusive zones, e.g. lain over its
-    // sidebar) turn this off and set faceWidth instead.
+    // turn this off and set faceWidth instead.
     property bool anchorLeft: true
     // Explicit window width when anchorLeft is off (-1 = stretch to anchors).
     property real faceWidth: -1

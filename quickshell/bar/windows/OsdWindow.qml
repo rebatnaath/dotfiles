@@ -14,9 +14,8 @@ PanelWindow {
     aboveWindows: true
     exclusionMode: ExclusionMode.Ignore
     // Pop up in the top-right corner (below the bar) when the bar sits on
-    // top, when the bar is full-width, or in nerv/lain mode; bottom-right
-    // otherwise.
-    readonly property bool atTop: (root.activeBar === "nerv" || root.activeBar === "lain"
+    // top, when the bar is full-width, or in nerv mode; bottom-right otherwise.
+    readonly property bool atTop: (root.activeBar === "nerv"
         || root.barSide === "top" || root.barFullWidth)
     anchors {
         top: atTop
@@ -25,19 +24,17 @@ PanelWindow {
     }
     margins {
         top: atTop ? (root.activeBar === "nerv" ? 36 * root.uiScale
-            : (root.activeBar === "lain" ? 42 * root.uiScale
-            : (root.barFullWidth ? 62 * root.uiScale : 9 * root.uiScale))) : 0
+            : (root.barFullWidth ? 62 * root.uiScale : 9 * root.uiScale)) : 0
         bottom: atTop ? 0 : 9 * root.uiScale
         right: (root.activeBar === "nerv" ? (root.windowGap + 8) : root.windowGap) * root.uiScale
     }
     implicitWidth: osdCard.implicitWidth
     implicitHeight: osdCard.implicitHeight + 8
-    // lain has its own OSD (lain/LainOsd.qml)
-    visible: osdCard.opacity > 0 && root.activeBar !== "lain"
+    visible: osdCard.opacity > 0
 
     FileView {
         id: osdStateFile
-        path: "/home/oryza/.cache/quickshell-osd.json"
+        path: Quickshell.env("HOME") + "/.cache/quickshell-osd.json"
         watchChanges: true
         // onFileChanged only fires the watcher; reload() and read the fresh
         // content in onTextChanged.

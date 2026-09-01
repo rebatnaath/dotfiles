@@ -12,7 +12,7 @@ POLL_SEC="${POLL_SEC:-60}"
 SOUND="$HOME/.local/share/sounds/battery-low.wav"
 STATE_FILE="$HOME/.cache/battery-notify.state"
 
-SOUND_LIB="/home/oryza/.config/sway/scripts"   # fallback sound lookup dir
+SOUND_LIB="$HOME/.config/sway/scripts"   # fallback sound lookup dir
 
 # Keep only a single monitor running across `swaymsg reload` autostarts: hold an
 # exclusive flock on a lockfile for the lifetime of the process; if it's already

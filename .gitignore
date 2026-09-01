@@ -7,3 +7,6 @@ __pycache__/
 
 # vendored skill assets
 quickshell/skills/
+
+# generated at runtime by theme-switch
+rofi/theme.rasi

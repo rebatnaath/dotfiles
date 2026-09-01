@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Switch the active bar mode from the command line.
+# Usage: bar-switch <fox|lonely|nerv>
+set -euo pipefail
+
+QS_BAR="$HOME/.config/quickshell/bar"
+SETTINGS_JS="$QS_BAR/settings.js"
+SCRIPTS="$HOME/.config/sway/scripts"
+
+if [[ $# -ne 1 ]]; then
+    echo "Usage: bar-switch <fox|lonely|nerv>"
+    exit 1
+fi
+
+NEW_BAR="$1"
+
+if [[ ! "$NEW_BAR" =~ ^(fox|lonely|nerv)$ ]]; then
+    echo "Error: invalid bar mode '$NEW_BAR'. Must be: fox, lonely, or nerv"
+    exit 1
+fi
+
+# Read current settings from settings.js
+read_setting() {
+    python3 -c "
+import re, sys
+raw = open('$SETTINGS_JS').read()
+m = re.search(r'$1:\s*\"?([^,\"}\s]+)', raw)
+print(m.group(1) if m else '$2')
+" 2>/dev/null || echo "$2"
+}
+
+borderWidth=$(read_setting 'borderWidth' '3')
+cornerRadius=$(read_setting 'cornerRadius' '2')
+barSide=$(read_setting 'barSide' 'bottom')
+fontFamily=$(read_setting 'fontFamily' 'GeistMono NFM')
+barBorder=$(read_setting 'barBorder' 'true')
+barShadow=$(read_setting 'barShadow' 'true')
+quickMenuBorder=$(read_setting 'quickMenuBorder' 'true')
+quickMenuShadow=$(read_setting 'quickMenuShadow' 'true')
+osdBorder=$(read_setting 'osdBorder' 'true')
+osdShadow=$(read_setting 'osdShadow' 'true')
+barFullWidth=$(read_setting 'barFullWidth' 'false')
+nightLight=$(read_setting 'nightLight' 'false')
+noiseLevel=$(read_setting 'noiseLevel' '0')
+nightLightIntensity=$(read_setting 'nightLightIntensity' '3')
+
+# Apply with the new bar mode
+bash "$SCRIPTS/rice-settings-apply" \
+    "$borderWidth" "$cornerRadius" "$barSide" "$fontFamily" \
+    "$barBorder" "$barShadow" "$quickMenuBorder" "$quickMenuShadow" \
+    "$osdBorder" "$osdShadow" "$barFullWidth" "$NEW_BAR" \
+    "$nightLight" "$noiseLevel" "$nightLightIntensity"

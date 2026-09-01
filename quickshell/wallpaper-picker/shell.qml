@@ -63,7 +63,7 @@ ShellRoot {
 
     FileView {
         id: settingsFile
-        path: "/home/oryza/.config/quickshell/bar/settings.js"
+        path: Quickshell.env("HOME") + "/.config/quickshell/bar/settings.js"
         preload: true
         blockAllReads: true
         watchChanges: false
@@ -108,7 +108,7 @@ ShellRoot {
 
     // Persist the current tokens to sway + disk via the shared bridge script.
     function saveRiceSettings(): void {
-        riceSettingsProc.command = ["bash", "/home/oryza/.config/sway/scripts/rice-settings-apply",
+        riceSettingsProc.command = ["bash", Quickshell.env("HOME") + "/.config/sway/scripts/rice-settings-apply",
             borderWidth + "", cornerRadius + "", barSide, fontFamily,
             barBorder + "", barShadow + "", quickMenuBorder + "", quickMenuShadow + "",
             osdBorder + "", osdShadow + "", barFullWidth + "", activeBar,
@@ -140,7 +140,7 @@ ShellRoot {
         interval: 60
         onTriggered: {
             var mode = root.nightLight ? "on" : "off"
-            nightLightProc.command = ["/home/oryza/.config/sway/scripts/nightlight-apply", mode, root.nightLightIntensity + ""]
+            nightLightProc.command = [Quickshell.env("HOME") + "/.config/sway/scripts/nightlight-apply", mode, root.nightLightIntensity + ""]
             nightLightProc.startDetached()
         }
     }

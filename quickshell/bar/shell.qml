@@ -9,7 +9,6 @@ import "windows"
 import "fox"
 import "lonely"
 import "nerv"
-import "lain"
 ShellRoot {
     id: root
 
@@ -20,10 +19,10 @@ ShellRoot {
     // QML tracks those reads, so any binding calling getColor re-evaluates
     // when the live palette is swapped.
 
-    // Config base dirs (single point of change for portability). QML does not
-    // expand $HOME, so set these to point at this user's $HOME/.config.
-    property string qsBarDir: "/home/oryza/.config/quickshell/bar"
-    property string swayScriptsDir: "/home/oryza/.config/sway/scripts"
+    // my config dirs; QML won't expand $HOME so pull it from env
+    readonly property string homeDir: Quickshell.env("HOME")
+    property string qsBarDir: homeDir + "/.config/quickshell/bar"
+    property string swayScriptsDir: homeDir + "/.config/sway/scripts"
 
     // Path to the generated palette. Kept in sync with theme-switch.
     readonly property string colorsPath: qsBarDir + "/colors.js"
@@ -202,7 +201,7 @@ ShellRoot {
         return 0.2126 * r + 0.7152 * g + 0.0722 * b
     }
 
-    // Darkest of the live palette colors (used by the lain bar background).
+    // Darkest of the live palette colors.
     readonly property string darkestColor: {
         var best = colorBg
         var cands = [colorBg, colorFg, colorAccent, colorSecondary, colorSurfaceVariant, colorMuted]
@@ -244,7 +243,7 @@ ShellRoot {
     property int wheelAccum: 0
     property string dateText: ""
     property string timeText: ""
-    // "22 aug 11:55" style stamp for the lain status group.
+    // "22 aug 11:55" style timestamp.
     property string dateTimeText: ""
     property string windowTitle: ""
     property string mediaStatus: "None"
@@ -263,8 +262,6 @@ ShellRoot {
     property bool isWallpaperPageOpen: false
     property bool isClipboardPageOpen: false
     property bool isSettingsPageOpen: false
-    // lain power-menu overlay (shared by the control center + sidebar)
-    property bool lainPowerOpen: false
     onIsQuickMenuOpenChanged: if (!isQuickMenuOpen) root.closeAllPages()
 
     function closeAllPages() {
@@ -801,32 +798,16 @@ ShellRoot {
     Component { id: foxBarComp; BarWindow {} }
     Component { id: lonelyBarComp; LonelyBar {} }
     Component { id: nervBarComp; NervBar {} }
-    Component { id: lainBarComp; LainBar {} }
 
     // Full-screen NERV backdrop (black + red rounded frame). Shown only while
     // the nerv bar is active; sits behind windows so clicks pass through.
     NervFrame {}
 
-    // Lain-mode left sidebar (entries + power off), lain bar only.
-    LainSidebar {}
-
-    // Invisible spacer reserving the top strip for the lain bar: sway only
-    // honours exclusive zones on TOP-anchored surfaces, and the lain bar
-    // itself is TOP|RIGHT so it can span over the sidebar's zone.
-    PanelWindow {
-        visible: root.activeBar === "lain"
-        color: "transparent"
-        exclusionMode: ExclusionMode.Auto
-        anchors { top: true; left: true; right: true }
-        implicitHeight: 38 * root.uiScale
-        mask: Region {}
-    }
-
     Loader {
         id: barLoader
         sourceComponent: root.activeBar === "lonely" ? lonelyBarComp
                       : root.activeBar === "nerv" ? nervBarComp
-                      : root.activeBar === "lain" ? lainBarComp : foxBarComp
+                      : foxBarComp
         property alias bar: barLoader.item
     }
 
@@ -923,14 +904,8 @@ ShellRoot {
         id: quickMenu
     }
 
-    // Lain-themed replacement for the quick menu.
-    LainControlCenter {}
-
     // Nerv-themed replacement for the quick menu.
     NervControlCenter {}
-
-    // Lain-themed OSD (bottom-centred strip).
-    LainOsd {}
 
     NotificationPopup { cardWidth: osdWindow.cardWidth }
 
@@ -969,6 +944,12 @@ ShellRoot {
         function openNotifications(): void { root.openQuickMenuPage("Notification") }
         function openClipboard(): void { root.openQuickMenuPage("Clipboard") }
         function openSettings(): void { root.openQuickMenuPage("Settings") }
+
+        function setBar(mode): void {
+            if (["fox", "lonely", "nerv"].indexOf(mode) === -1) return
+            root.activeBar = mode
+            root.saveRiceSettings()
+        }
 
         // Hot-reload the palette from colors.js (called by theme-switch after
         // it regenerates the file) — updates the bar's colors in place instead

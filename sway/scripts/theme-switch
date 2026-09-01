@@ -29,6 +29,15 @@ FOX_CHROME="$HOME/.config/mozilla/firefox/evdp80ux.default-release/chrome"
 FOX_UC="$FOX_CHROME/userChrome.css"
 FOX_CONTENT="$FOX_CHROME/userContent.css"
 mkdir -p "$QS_BAR" "$(dirname "$ROFI_THEME")" "$(dirname "$SWAY_THEME")" "$(dirname "$GTK3_CSS")" "$(dirname "$GTK4_CSS")" "$(dirname "$FISH_THEME")" "$(dirname "$BLE_THEME")" "$(dirname "$FOX_UC")"
+# grab whatever output is focused instead of assuming eDP-1 (sway first,
+# then hyprctl); MONITOR=<name> still wins
+MONITOR="${MONITOR:-$(swaymsg -t get_outputs --raw 2>/dev/null | python3 -c 'import json,sys
+outs=json.load(sys.stdin)
+print(next((o["name"] for o in outs if o.get("focused")), outs[0]["name"] if outs else ""))' 2>/dev/null \
+    || hyprctl monitors -j 2>/dev/null | python3 -c 'import json,sys
+mons=json.load(sys.stdin)
+print(next((m["name"] for m in mons if m.get("focused")), mons[0]["name"] if mons else ""))' 2>/dev/null \
+    || true)}"
 MONITOR="${MONITOR:-eDP-1}"
 
 # NERV mode: if the active bar is the nerv bar, force a fixed red theme instead
@@ -550,7 +559,7 @@ reload_bar() {
 }
 reload_bar
 
-# Re-tint the fastfetch lain logo with the new palette (no-op if unchanged).
+# Re-tint the fastfetch logo with the new palette (no-op if unchanged).
 "$HOME/.config/fastfetch/tint-logo.sh" >/dev/null 2>&1 || true
 
 if command -v notify-send >/dev/null 2>&1; then

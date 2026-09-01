@@ -16,9 +16,9 @@ PanelWindow {
     // Vertically at the top when the bar is on top or is full-width; horizontally
     // on the right when full-width or nerv (nerv shares the top-right under the
     // OSD). Non-full-width top bar keeps notifications top-left beside the bar.
-    readonly property bool atTop: (root.activeBar === "nerv" || root.activeBar === "lain"
+    readonly property bool atTop: (root.activeBar === "nerv"
         || root.barSide === "top" || root.barFullWidth)
-    readonly property bool atRight: (root.activeBar === "nerv" || root.activeBar === "lain" || root.barFullWidth)
+    readonly property bool atRight: (root.activeBar === "nerv" || root.barFullWidth)
     anchors {
         top: atTop
         bottom: !atTop
@@ -27,8 +27,7 @@ PanelWindow {
     }
     margins {
         top: atTop ? (root.activeBar === "nerv" ? 36 * root.uiScale
-            : (root.activeBar === "lain" ? 42 * root.uiScale
-            : (root.barFullWidth ? 62 * root.uiScale : 9 * root.uiScale))) : 0
+            : (root.barFullWidth ? 62 * root.uiScale : 9 * root.uiScale)) : 0
         bottom: atTop ? 0 : 9 * root.uiScale
         left: atRight ? 0 : root.windowGap
         right: atRight ? (root.activeBar === "nerv" ? (root.windowGap + 8) * root.uiScale : root.windowGap) : 0

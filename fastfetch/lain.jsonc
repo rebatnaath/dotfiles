@@ -26,7 +26,7 @@
             "type": "command",
             "key": "pkgs",
             "keyColor": "38;5;216",
-            "text": "cnt() { awk '/(home\\.packages|environment\\.systemPackages|users\\.oryza\\.packages) = / || /^[[:space:]]*packages = with pkgs/ {p=1; next} p && /^[[:space:]]*]/ {p=0; next} p && /^[[:space:]]*[a-zA-Z0-9_.+*-]+/ {gsub(/[ ,]/,\"\",$0); if ($0!=\"\" && $0!~/inputs\\./ && $0!~/\\$/) c++} END {print c+0}' \"$1\"; }; s=$(cnt ~/nixConfig/hosts/nixos/configuration.nix); h=$(cnt ~/nixConfig/hosts/nixos/home.nix); printf '%s sys / %s user' \"$s\" \"$h\""
+            "text": "cnt() { awk '/(home\\.packages|environment\\.systemPackages|users\\.[a-zA-Z0-9_-]+\\.packages) = / || /^[[:space:]]*packages = with pkgs/ {p=1; next} p && /^[[:space:]]*]/ {p=0; next} p && /^[[:space:]]*[a-zA-Z0-9_.+*-]+/ {gsub(/[ ,]/,\"\",$0); if ($0!=\"\" && $0!~/inputs\\./ && $0!~/\\$/) c++} END {print c+0}' \"$1\"; }; NIX_DIR=\"${NIX_CONFIG:-$HOME/nixConfig}\"; s=$(cnt \"$NIX_DIR\"/hosts/nixos/configuration.nix); h=$(cnt \"$NIX_DIR\"/hosts/nixos/home.nix); printf '%s sys / %s user' \"$s\" \"$h\""
         },
         { "type": "wm", "key": "wm", "keyColor": "38;5;245" },
         { "type": "command", "key": "ram", "keyColor": "38;5;210", "text": "free -m | awk 'NR==2 {print $3 \" / \" $2 \" MB\"}'" },

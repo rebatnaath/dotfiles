@@ -26,7 +26,7 @@ ShellRoot {
 
     FileView {
         id: settingsFile
-        path: "/home/oryza/.config/quickshell/bar/settings.js"
+        path: Quickshell.env("HOME") + "/.config/quickshell/bar/settings.js"
         preload: true
         blockAllReads: true
         watchChanges: true
@@ -40,9 +40,11 @@ ShellRoot {
     }
 
     // Current wallpaper (symlink kept in sync by theme-switch).
-    readonly property string wallpaperPath: "/home/oryza/.cache/current-wallpaper"
+    readonly property string homeDir: Quickshell.env("HOME")
+    readonly property string wallpaperPath: homeDir + "/.cache/current-wallpaper"
     // Profile avatar (same asset as the bar's ProfileHeader).
-    readonly property string avatarPath: "file:///var/lib/AccountsService/icons/oryza"
+    readonly property string userName: Quickshell.env("USER") || "user"
+    readonly property string avatarPath: "file:///var/lib/AccountsService/icons/" + userName
 
     // ---- Clock -------------------------------------------------------------
     property string timeText: ""
@@ -89,7 +91,7 @@ ShellRoot {
     Process { id: mediaNextProc }
 
     function pollMedia() {
-        mediaProc.exec(["/home/oryza/.config/sway/scripts/now-playing"])
+        mediaProc.exec([root.homeDir + "/.config/sway/scripts/now-playing"])
     }
 
     Timer {
@@ -216,7 +218,7 @@ ShellRoot {
             Image {
                 id: wallpaper
                 anchors.fill: parent
-                source: "file:///home/oryza/.cache/lock-blur.png"
+                source: "file://" + root.homeDir + "/.cache/lock-blur.png"
                 fillMode: Image.PreserveAspectCrop
                 smooth: true
                 cache: false
@@ -324,7 +326,7 @@ ShellRoot {
 
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
-                            text: "oryza"
+                            text: root.userName
                             font.family: root.fontFamily
                             font.pixelSize: 20
                             font.bold: true
@@ -517,7 +519,7 @@ ShellRoot {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                mediaPlayPauseProc.command = ["/home/oryza/.config/sway/scripts/media-control", "PlayPause"]
+                                mediaPlayPauseProc.command = [root.homeDir + "/.config/sway/scripts/media-control", "PlayPause"]
                                 mediaPlayPauseProc.startDetached()
                             }
                         }
@@ -549,7 +551,7 @@ ShellRoot {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                mediaNextProc.command = ["/home/oryza/.config/sway/scripts/media-control", "Next"]
+                                mediaNextProc.command = [root.homeDir + "/.config/sway/scripts/media-control", "Next"]
                                 mediaNextProc.startDetached()
                             }
                         }

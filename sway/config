@@ -130,7 +130,6 @@ bindsym XF86AudioPrev exec playerctl previous
 ### Layout
 gaps inner 5
 gaps outer 30
-default_border pixel 4
 focus_follows_mouse yes
 
 # SwayFX blur
@@ -166,13 +165,6 @@ for_window [title="^rofi$"] floating enable, move position center
 for_window [app_id="^wallpaper-picker$"] border none
 for_window [app_id="^power-menu$"] border none
 for_window [app_id="^rofi$"] border none
-# imv + kitty get a real titlebar; colors come from theme-colors (matugen bg,
-# the same hex kitty uses for its terminal background)
-for_window [app_id="^imv$"] border normal 1
-for_window [app_id="^kitty$"] border normal 1
-
-# thick lain-style titlebars (height = font height + 2 * vertical padding)
-titlebar_padding 14 14
 
 # zen popups/PiP get a pixel border
 for_window [app_id="zen-beta" floating] border pixel 4

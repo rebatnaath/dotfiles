@@ -61,22 +61,23 @@ Column {
         clipboardList.contentY = scrollPos
     }
 
+    // quickshell gives child procs a stripped PATH, so re-add my nix bins
+    readonly property string pathPrepend: 'PATH="$HOME/.nix-profile/bin:/etc/profiles/per-user/$USER/bin:$PATH"'
+
     function refresh() {
-        // Absolute path: quickshell runs child Process with a trimmed PATH (only
-        // /run/current-system/sw/bin etc.), so bare `cliphist` wouldn't resolve.
-        clipListProc.command = ["bash", "-c", "/etc/profiles/per-user/oryza/bin/cliphist list | head -n 25"]
+        clipListProc.command = ["bash", "-c", pathPrepend + " ; cliphist list | head -n 25"]
         clipListProc.running = true
     }
 
     function copyEntry(entry) {
         // Decode the exact entry and copy it to the clipboard so the user can
         // paste it themselves (no auto-paste).
-        clipActionProc.command = ["bash", "-c", 'printf \'%s\' "$1" | /etc/profiles/per-user/oryza/bin/cliphist decode | /etc/profiles/per-user/oryza/bin/wl-copy 2>/dev/null; true', "clip", entry]
+        clipActionProc.command = ["bash", "-c", pathPrepend + " ; printf '%s' \"$1\" | cliphist decode | wl-copy 2>/dev/null; true", "clip", entry]
         clipActionProc.startDetached()
     }
 
     function deleteEntry(entry) {
-        clipActionProc.command = ["bash", "-c", 'printf \'%s\' "$1" | /etc/profiles/per-user/oryza/bin/cliphist delete 2>/dev/null; true', "clip", entry]
+        clipActionProc.command = ["bash", "-c", pathPrepend + " ; printf '%s' \"$1\" | cliphist delete 2>/dev/null; true", "clip", entry]
         clipActionProc.startDetached()
     }
 

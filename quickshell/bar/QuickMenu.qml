@@ -14,8 +14,8 @@ PanelWindow {
     // typed into (PanelWindow defaults to focusable: false, which silently
     // sends keystrokes to whatever app is behind the menu).
     focusable: true
-    // lain and nerv have their own control centers.
-    visible: root.isQuickMenuOpen && root.activeBar !== "lain" && root.activeBar !== "nerv"
+    // nerv has its own control center.
+    visible: root.isQuickMenuOpen && root.activeBar !== "nerv"
     anchors { top: true; left: true; right: true; bottom: true }
 
     // Card geometry, named so the height formula below reads clearly.
@@ -93,11 +93,10 @@ PanelWindow {
         // it when the bar is at the bottom. Right edge aligned with "controls":
         // in non-full-width the bar is inset by barSideMargin, but in full-width
         // it spans edge-to-edge so align to the band the ctrls label sits in.
-        // In lain mode the bar is a flush top strip, so align near the edge.
-        x: (root.barFullWidth || root.activeBar === "lain")
+        x: root.barFullWidth
             ? Quickshell.screens[0].width - 12 * root.uiScale - menuCard.width
             : Quickshell.screens[0].width - root.barSideMargin - 12 * root.uiScale - menuCard.width
-        y: (root.barSide === "top" || root.activeBar === "lain")
+        y: root.barSide === "top"
             ? 77 * root.uiScale
             : Quickshell.screens[0].height - 77 * root.uiScale - menuCard.height
         width: 400 * root.uiScale

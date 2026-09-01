@@ -1,3 +1,4 @@
+import Quickshell
 import Quickshell.Widgets
 import QtQuick
 
@@ -6,6 +7,9 @@ import QtQuick
 // the parent owns the page-switching logic.
 Item {
     id: profileHeader
+
+    readonly property string userName: Quickshell.env("USER") || Quickshell.env("LOGNAME") || "user"
+    readonly property string avatarUrl: "file:///var/lib/AccountsService/icons/" + userName
 
     signal wallpaperRequested()
     signal notificationsRequested()
@@ -41,7 +45,7 @@ Item {
 
                 Image {
                     anchors { fill: parent; margins: -16 }
-                    source: "file:///var/lib/AccountsService/icons/oryza"
+                    source: profileHeader.avatarUrl
                     fillMode: Image.PreserveAspectCrop
                     smooth: true
                 }
@@ -53,7 +57,7 @@ Item {
             spacing: 2 * root.uiScale
 
             Text {
-                text: "oryza"
+                text: profileHeader.userName
                 font.family: root.fontFamily
                 font.pixelSize: 14 * root.uiScale
                 font.bold: true

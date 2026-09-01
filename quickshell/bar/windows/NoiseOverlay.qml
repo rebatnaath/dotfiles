@@ -26,7 +26,7 @@ PanelWindow {
 
     Image {
         anchors.fill: parent
-        source: "file:///home/oryza/.config/quickshell/bar/assets/grain.png"
+        source: Qt.resolvedUrl("../assets/grain.png")
         cache: false
         fillMode: Image.Tile
         asynchronous: false
