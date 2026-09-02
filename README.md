@@ -22,19 +22,17 @@ detailed. Don't cringe on me, please.
 ## What you get
 
 Everything here drops straight into `~/.config/` and gives you a **SwayFX**
-setup with a **Quickshell** bar (three variants), one shared control menu with
+setup with a **Quickshell** bar (two variants), one shared control menu with
 all the pages, a lockscreen, on-screen volume/notification displays, plus
 kitty, rofi, nvim and fastfetch configs.
 
 ### Bars
 
-Three bar variants, switched with `activeBar` in `quickshell/bar/settings.js`:
+Two bar variants, switched with `activeBar` in `quickshell/bar/settings.js`:
 
 - **Fox**: a foxes themed bottom bar.
 - **Lonely**: a single-colour accent bar (focused workspace + window title
   share the lightest matugen tone, inactive workspaces get darkened chips).
-- **Nerv**: an Evangelion theme: the EVA backdrop plus character icons on the
-  bar, lock and power menu.
 
 `fox` and `lonely` are just the names I gave them, no particular reason.
 
@@ -42,7 +40,6 @@ Three bar variants, switched with `activeBar` in `quickshell/bar/settings.js`:
   <tr>
     <td align="center"><b>Fox</b><br><img src="assets/fox-1.png" width="320"><br><img src="assets/fox-2.png" width="320"></td>
     <td align="center"><b>Lonely</b><br><img src="assets/lonely-1.png" width="320"><br><img src="assets/lonely-2.png" width="320"></td>
-    <td align="center"><b>Nerv</b><br><img src="assets/nerv-1.png" width="320"><br><img src="assets/nerv-2.png" width="320"></td>
   </tr>
 </table>
 
@@ -53,17 +50,13 @@ All bars open it by clicking a spot in their own layout:
 
 - **Fox**: click the `ctrls` button on the right.
 - **Lonely**: click any of the right info blocks (`[bat]`, `[vol]`, `[time]`).
-- **Nerv**: click the `MAGI SYSTEM` label on the right.
 
-The menu's colours follow the bar. For **nerv** the whole control center is the
-fixed EVA red and cannot be rethemed at runtime; for **fox** and **lonely** it
-picks up the wallpaper-derived matugen palette, so it follows whatever
-wallpaper you apply.
+The menu's colours follow the bar's wallpaper-derived matugen palette, so it
+follows whatever wallpaper you apply.
 
 The menu is the **control center** (bluetooth, wifi, brightness, volume, media)
 plus a set of pages, each with its own panel (the control center recolours live
-when you change the wallpaper for fox/lonely; the nerv control center is always
-the fixed EVA red):
+when you change the wallpaper):
 
 <table>
   <tr>
@@ -76,7 +69,6 @@ the fixed EVA red):
     <td align="center"><img src="assets/ctrl-notification.png" width="180"><br><b>Notifications</b></td>
     <td align="center"><img src="assets/ctrl-power.png" width="180"><br><b>Power menu</b></td>
     <td align="center"><img src="assets/example-control-center-color-change-wallpaper.png" width="180"><br><b>Recolours with wallpaper</b></td>
-    <td align="center"><img src="assets/nerv-contrl-center.png" width="180"><br><b>Nerv control center (fixed red)</b></td>
   </tr>
 </table>
 
