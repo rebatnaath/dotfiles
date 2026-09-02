@@ -93,48 +93,6 @@ PanelWindow {
             }
             spacing: 12 * root.uiScale
 
-            // header
-            Row {
-                width: parent.width
-                spacing: 8 * root.uiScale
-
-                Text {
-                    text: "nerv@hq"
-                    font.family: root.fontFamily
-                    font.pixelSize: 12 * root.uiScale
-                    color: ccWindow.cRed
-                }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: ":"
-                    font.family: root.fontFamily
-                    font.pixelSize: 12 * root.uiScale
-                    color: ccWindow.cDim
-                }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "control-center"
-                    font.family: root.fontFamily
-                    font.pixelSize: 12 * root.uiScale
-                    color: ccWindow.cDim
-                }
-
-                Item { width: parent.width - headerRow.implicitWidth; height: 1 }
-
-                Text {
-                    id: headerRow
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.dateTimeText.toUpperCase()
-                    font.family: root.fontFamily
-                    font.pixelSize: 11 * root.uiScale
-                    color: ccWindow.cDim
-                }
-            }
-
-            Rectangle { width: parent.width; height: 1; color: ccWindow.cRedDim }
-
             // main grid
             Row {
                 width: parent.width
@@ -260,8 +218,8 @@ PanelWindow {
 
                             Repeater {
                                 model: [
-                                    { name: "vol", val: root.isVolumeMuted ? "muted" : (root.volume >= 0 ? root.volume + "%" : "--"), level: root.isVolumeMuted ? 0 : root.volume },
-                                    { name: "lux", val: root.brightnessLevel >= 0 ? root.brightnessLevel + "%" : "--", level: root.brightnessLevel }
+                                    { name: "vol", kind: "volume", val: root.isVolumeMuted ? "muted" : (root.volume >= 0 ? root.volume + "%" : "--"), level: root.isVolumeMuted ? 0 : root.volume },
+                                    { name: "lux", kind: "brightness", val: root.brightnessLevel >= 0 ? root.brightnessLevel + "%" : "--", level: root.brightnessLevel }
                                 ]
 
                                 delegate: Column {
@@ -291,6 +249,7 @@ PanelWindow {
                                     }
 
                                     Rectangle {
+                                        id: sliderTrack
                                         width: parent.width
                                         height: 4 * root.uiScale
                                         radius: 2 * root.uiScale
@@ -303,6 +262,33 @@ PanelWindow {
                                             width: Math.max(0, Math.min(100, modelData.level)) / 100 * parent.width
                                             radius: 2 * root.uiScale
                                             color: ccWindow.cRed
+                                        }
+
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+
+                                            function valueAt(mouseX) {
+                                                return Math.max(0, Math.min(100,
+                                                    mouseX / sliderTrack.width * 100))
+                                            }
+
+                                            onPressed: (mouse) => apply(valueAt(mouse.x), true)
+                                            onPositionChanged: (mouse) => { if (pressed) apply(valueAt(mouse.x), true) }
+                                            onReleased: (mouse) => apply(valueAt(mouse.x), false)
+
+                                            function apply(v, preview) {
+                                                if (modelData.kind === "volume") {
+                                                    root.isVolumeDragging = preview
+                                                    root.volume = v
+                                                    if (!preview) {
+                                                        root.isVolumeDragging = false
+                                                        root.setVolume(v)
+                                                    }
+                                                } else {
+                                                    root.setBrightness(Math.round(v))
+                                                }
+                                            }
                                         }
                                     }
                                 }
