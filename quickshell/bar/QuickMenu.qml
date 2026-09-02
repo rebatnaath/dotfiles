@@ -17,6 +17,7 @@ PanelWindow {
     // nerv uses the same control center with red theme.
     visible: root.isQuickMenuOpen
     anchors { top: true; left: true; right: true; bottom: true }
+    margins { top: 0; bottom: 0; left: 0; right: 0 }
 
     // Card geometry, named so the height formula below reads clearly.
     readonly property int cardTopPadding: Math.round(17 * root.uiScale)
