@@ -99,9 +99,14 @@ PanelWindow {
             : Quickshell.screens[0].width - root.barSideMargin - 12 * root.uiScale - menuCard.width
         y: {
             var screenH = Quickshell.screens[0].height
-            // Hardcoded face positions per bar type.
-            // nerv: face=60px, margin=16/26, no shadow
-            // fox/lonely: face=46px, margin=9, shadow=8 when enabled
+            // Use bar's reported face position if available.
+            if (root.barItem) {
+                if (root.barSide === "top" && root.barItem.faceBottom !== undefined)
+                    return root.barItem.faceBottom
+                if (root.barSide === "bottom" && root.barItem.faceTop !== undefined)
+                    return Math.max(0, root.barItem.faceTop - menuCard.height)
+            }
+            // Fallback: hardcoded positions.
             var barBottom, barTop
             if (root.activeBar === "nerv") {
                 barBottom = 76 * root.uiScale

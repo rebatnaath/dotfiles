@@ -16,7 +16,16 @@ PanelWindow {
     aboveWindows: true
     exclusionMode: ExclusionMode.Auto
 
-    // Float the bar inset from the screen edges so it sits clear of the NERV
+    // Face bottom in screen coordinates for menu positioning.
+    readonly property real faceBottom: {
+        var m = root.barSide === "top" ? 16 : 0
+        return (m + 60) * root.uiScale
+    }
+    readonly property real faceTop: {
+        var m = root.barSide === "bottom" ? 26 : 0
+        var h = root.barSide === "top" ? 68 : 68
+        return Quickshell.screens[0].height - (m + 60) * root.uiScale
+    }
     // frame, with a visible top/bottom gap and generous side margins.
     margins {
         top: (root.barSide === "top" ? 16 : 0) * root.uiScale

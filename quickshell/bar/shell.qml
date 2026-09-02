@@ -335,6 +335,9 @@ ShellRoot {
     // Bar floats centered at 60% of the screen width (20% side margins).
     readonly property real barSideMargin: Quickshell.screens[0].width * 0.2
 
+    // Reference to the loaded bar for menu positioning.
+    property Item barItem: null
+
     // DPI-based UI scale. logicalPixelDensity is pixels-per-mm; convert to
     // logical dots-per-inch and gauge against the standard 96 DPI. Clamped so
     // tiny/low-DPI screens don't collapse and hi-DPI screens don't explode.
@@ -809,6 +812,7 @@ ShellRoot {
                       : root.activeBar === "nerv" ? nervBarComp
                       : foxBarComp
         property alias bar: barLoader.item
+        onItemChanged: if (item) root.barItem = item
     }
 
     HoverTip {
