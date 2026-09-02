@@ -14,8 +14,8 @@ PanelWindow {
     // typed into (PanelWindow defaults to focusable: false, which silently
     // sends keystrokes to whatever app is behind the menu).
     focusable: true
-    // nerv has its own control center.
-    visible: root.isQuickMenuOpen && root.activeBar !== "nerv"
+    // nerv uses the same control center with red theme.
+    visible: root.isQuickMenuOpen
     anchors { top: true; left: true; right: true; bottom: true }
 
     // Card geometry, named so the height formula below reads clearly.
@@ -84,7 +84,7 @@ PanelWindow {
         blur: 0
         spread: 0
         offset: Qt.vector2d(8, 8)
-        visible: root.quickMenuShadow && root.activeBar !== "nerv"
+        visible: root.quickMenuShadow
     }
 
     Rectangle {

@@ -904,9 +904,6 @@ ShellRoot {
         id: quickMenu
     }
 
-    // Nerv-themed replacement for the quick menu.
-    NervControlCenter {}
-
     NotificationPopup { cardWidth: osdWindow.cardWidth }
 
     NoiseOverlay {}
