@@ -97,8 +97,8 @@ PanelWindow {
             ? Quickshell.screens[0].width - 12 * root.uiScale - menuCard.width
             : Quickshell.screens[0].width - root.barSideMargin - 12 * root.uiScale - menuCard.width
         y: root.barSide === "top"
-            ? 77 * root.uiScale
-            : Quickshell.screens[0].height - 77 * root.uiScale - menuCard.height
+            ? 48 * root.uiScale
+            : Quickshell.screens[0].height - 48 * root.uiScale - menuCard.height
         width: 400 * root.uiScale
         // Constant height across all pages: the main content (system controls,
         // incl. the media section) sets the size; the power/notification/
