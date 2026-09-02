@@ -96,9 +96,26 @@ PanelWindow {
         x: root.barFullWidth
             ? Quickshell.screens[0].width - 12 * root.uiScale - menuCard.width
             : Quickshell.screens[0].width - root.barSideMargin - 12 * root.uiScale - menuCard.width
-        y: root.barSide === "top"
-            ? root.barHeight + 4 * root.uiScale
-            : Quickshell.screens[0].height - root.barHeight - menuCard.height - 4 * root.uiScale
+        y: {
+            var screenH = Quickshell.screens[0].height
+            // Bar vertical margins from screen edge
+            var barMargin = 0
+            if (!root.barFullWidth) {
+                if (root.activeBar === "nerv") {
+                    barMargin = root.barSide === "top" ? 16 * root.uiScale : 26 * root.uiScale
+                } else {
+                    barMargin = 9 * root.uiScale
+                }
+            }
+            if (root.barSide === "top") {
+                // Below the bar: margin + bar height + small gap
+                return barMargin + root.barHeight + 2 * root.uiScale
+            } else {
+                // Above the bar: clamp to screen
+                var desired = screenH - barMargin - root.barHeight - menuCard.height - 2 * root.uiScale
+                return Math.max(0, desired)
+            }
+        }
         width: 400 * root.uiScale
         // Constant height across all pages: the main content (system controls,
         // incl. the media section) sets the size; the power/notification/
