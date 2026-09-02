@@ -17,7 +17,7 @@
 #   osdBorder        true|false    accent border on the OSD / notifications
 #   osdShadow        true|false    offset shadow on the OSD / notifications
 #   barFullWidth     true|false    stretch the bar edge-to-edge (no side gap)
-#   activeBar        fox|lonely|nerv   which bar to show (fox = classic, lonely = accent, nerv = NERV)
+#   activeBar        fox|lonely      which bar to show (fox = classic, lonely = accent)
 #   nightLight       true|false    wlsunset night light on/off
 #   noiseLevel       0|1..5        e-ink/e-paper grain intensity (0 = off)
 set -euo pipefail
@@ -42,7 +42,7 @@ SETTINGS_JS="$HOME/.config/quickshell/bar/settings.js"
 SWAY_SETTINGS_CONF="$HOME/.config/sway/settings.conf"
 KITTY_CONF="$HOME/.config/kitty/kitty.conf"
 # Previous active bar (settings.js is about to be overwritten), so a bar change
-# into/out of nerv mode can re-theme on the spot.
+# can re-theme on the spot.
 prevActiveBar="$(python3 -c 'import re;m=re.search(r"activeBar:\s*\"([^\"]*)\"",open("'$SETTINGS_JS'").read());print(m.group(1) if m else "fox")' 2>/dev/null || echo fox)"
 mkdir -p "$(dirname "$SETTINGS_JS")" "$(dirname "$SWAY_SETTINGS_CONF")"
 
@@ -114,12 +114,5 @@ fi
 # The bar also polls every 400ms as a fallback, but this removes the lag and
 # avoids relying on the poll timer right after a change.
 quickshell ipc -p "$HOME/.config/quickshell/bar" call bar reloadSettings >/dev/null 2>&1 || true
-
-# Re-theme when the bar crosses into/out of nerv mode so the rest of the system
-# turns red (or back to the wallpaper palette) right away instead of waiting for
-# the next theme-switch. Runs theme-switch restore in the background.
-if [[ "$prevActiveBar" != "$activeBar" && ( "$prevActiveBar" == "nerv" || "$activeBar" == "nerv" ) ]]; then
-    nohup setsid bash -c 'exec "$HOME/.config/sway/scripts/theme-switch"' >/dev/null 2>&1 &
-fi
 
 echo "applied: border=${borderWidth}px corner=${cornerRadius}px bar=${barSide} font=${fontFamily} bar=${barBorder}/${barShadow} qmenu=${quickMenuBorder}/${quickMenuShadow} osd=${osdBorder}/${osdShadow} fullwidth=${barFullWidth} active=${activeBar} night=${nightLight}/${nightLightIntensity}% noise=${noiseLevel}"
