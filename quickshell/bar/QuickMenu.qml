@@ -98,12 +98,13 @@ PanelWindow {
             : Quickshell.screens[0].width - root.barSideMargin - 12 * root.uiScale - menuCard.width
         y: {
             var screenH = Quickshell.screens[0].height
+            var gap = 4 * root.uiScale
             // Use bar's reported face position if available.
             if (root.barItem) {
                 if (root.barSide === "top" && root.barItem.faceBottom !== undefined)
-                    return root.barItem.faceBottom
+                    return root.barItem.faceBottom + gap
                 if (root.barSide === "bottom" && root.barItem.faceTop !== undefined)
-                    return Math.max(0, root.barItem.faceTop - menuCard.height)
+                    return Math.max(0, root.barItem.faceTop - menuCard.height - gap)
             }
             // Fallback: hardcoded positions.
             var barBottom, barTop
@@ -114,7 +115,7 @@ PanelWindow {
                 barBottom = (root.barShadow ? 63 : 55) * root.uiScale
                 barTop = screenH - (root.barShadow ? 63 : 55) * root.uiScale
             }
-            return root.barSide === "top" ? barBottom : Math.max(0, barTop - menuCard.height)
+            return root.barSide === "top" ? barBottom + gap : Math.max(0, barTop - menuCard.height - gap)
         }
         width: 400 * root.uiScale
         // Constant height across all pages: the main content (system controls,

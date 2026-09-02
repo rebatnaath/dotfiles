@@ -62,6 +62,14 @@ PanelWindow {
         right: sideInset * root.uiScale
     }
 
+    // Expose face edges in screen coordinates for menu positioning.
+    readonly property real faceTop: side === "top"
+        ? marginTop + (showShadow && !root.barFullWidth ? 8 : 0) * root.uiScale
+        : Quickshell.screens[0].height - marginBottom - faceHeight - (showShadow && !root.barFullWidth ? 8 : 0) * root.uiScale
+    readonly property real faceBottom: side === "top"
+        ? marginTop + (showShadow && !root.barFullWidth ? 8 : 0) * root.uiScale + faceHeight
+        : Quickshell.screens[0].height - marginBottom
+
     // Hard offset shadow cast toward the trailing edge: below the bar at the
     // bottom, above it at the top. The face is inset from that edge so the
     // shadow has room to show.
