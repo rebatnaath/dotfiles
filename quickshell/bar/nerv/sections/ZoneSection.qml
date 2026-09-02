@@ -44,11 +44,11 @@ Item {
         }
     }
 
-    // Click opens the quick menu / control center.
+    // Click toggles the quick menu / control center.
     MouseArea {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: root.isQuickMenuOpen = true
+        onClicked: root.isQuickMenuOpen = !root.isQuickMenuOpen
     }
 }

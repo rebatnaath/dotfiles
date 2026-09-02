@@ -335,6 +335,9 @@ ShellRoot {
     // Bar floats centered at 60% of the screen width (20% side margins).
     readonly property real barSideMargin: Quickshell.screens[0].width * 0.2
 
+    // Current bar height in px (updated by each bar component).
+    property real barHeight: 38 * root.uiScale
+
     // DPI-based UI scale. logicalPixelDensity is pixels-per-mm; convert to
     // logical dots-per-inch and gauge against the standard 96 DPI. Clamped so
     // tiny/low-DPI screens don't collapse and hi-DPI screens don't explode.

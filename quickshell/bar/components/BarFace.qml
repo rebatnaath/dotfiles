@@ -64,6 +64,8 @@ PanelWindow {
         right: sideInset * root.uiScale
     }
 
+    Component.onCompleted: root.barHeight = barFace.faceHeight
+
     // Hard offset shadow cast toward the trailing edge: below the bar at the
     // bottom, above it at the top. The face is inset from that edge so the
     // shadow has room to show.
