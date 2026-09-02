@@ -337,6 +337,8 @@ ShellRoot {
 
     // Current bar height in px (updated by each bar component).
     property real barHeight: 38 * root.uiScale
+    // Bar's edge position from screen edge (height + margin, updated by bars).
+    property real barEdge: 38 * root.uiScale
 
     // DPI-based UI scale. logicalPixelDensity is pixels-per-mm; convert to
     // logical dots-per-inch and gauge against the standard 96 DPI. Clamped so

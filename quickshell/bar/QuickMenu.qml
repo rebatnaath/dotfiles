@@ -98,22 +98,12 @@ PanelWindow {
             : Quickshell.screens[0].width - root.barSideMargin - 12 * root.uiScale - menuCard.width
         y: {
             var screenH = Quickshell.screens[0].height
-            // Bar vertical margins from screen edge
-            var barMargin = 0
-            if (!root.barFullWidth) {
-                if (root.activeBar === "nerv") {
-                    barMargin = root.barSide === "top" ? 16 * root.uiScale : 26 * root.uiScale
-                } else {
-                    barMargin = 9 * root.uiScale
-                }
-            }
             if (root.barSide === "top") {
-                // Below the bar: margin + bar height + small gap
-                return barMargin + root.barHeight + 2 * root.uiScale
+                // barEdge = margin + barHeight, so menu starts right below bar
+                return root.barEdge
             } else {
-                // Above the bar: clamp to screen
-                var desired = screenH - barMargin - root.barHeight - menuCard.height - 2 * root.uiScale
-                return Math.max(0, desired)
+                // barEdge = margin + barHeight from bottom, menu ends right above bar
+                return Math.max(0, screenH - root.barEdge - menuCard.height)
             }
         }
         width: 400 * root.uiScale
