@@ -8,7 +8,6 @@ import "settings.js" as Settings
 import "windows"
 import "fox"
 import "lonely"
-import "nerv"
 ShellRoot {
     id: root
 
@@ -136,20 +135,6 @@ ShellRoot {
     }
 
     function getColor(key, fallback) {
-        // Nerv bar override: pin every token to the NERV red-on-black scheme
-        // (matching the bar) instead of the wallpaper palette, so the quick
-        // menu / OSD / notifications share the nerv look.
-        if (activeBar === "nerv") {
-            switch (key) {
-                case "bg": return "#0d0707"
-                case "fg": return "#f2d2d2"
-                case "accent": return "#9D0A12"
-                case "secondary": return "#a00a0a"
-                case "surface_variant": return "#2a1414"
-                case "muted": return "#8a5a5a"
-                default: return fallback
-            }
-        }
         switch (key) {
             case "bg": return colorBg
             case "fg": return colorFg
@@ -800,16 +785,10 @@ ShellRoot {
     // hidden bar can never overlap or grab the exclusive zone of the shown one.
     Component { id: foxBarComp; BarWindow {} }
     Component { id: lonelyBarComp; LonelyBar {} }
-    Component { id: nervBarComp; NervBar {} }
-
-    // Full-screen NERV backdrop (black + red rounded frame). Shown only while
-    // the nerv bar is active; sits behind windows so clicks pass through.
-    NervFrame {}
 
     Loader {
         id: barLoader
         sourceComponent: root.activeBar === "lonely" ? lonelyBarComp
-                      : root.activeBar === "nerv" ? nervBarComp
                       : foxBarComp
         property alias bar: barLoader.item
         onItemChanged: if (item) root.barItem = item
@@ -947,7 +926,7 @@ ShellRoot {
         function openSettings(): void { root.openQuickMenuPage("Settings") }
 
         function setBar(mode): void {
-            if (["fox", "lonely", "nerv"].indexOf(mode) === -1) return
+            if (["fox", "lonely"].indexOf(mode) === -1) return
             root.activeBar = mode
             root.saveRiceSettings()
         }

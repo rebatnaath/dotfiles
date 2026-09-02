@@ -5,7 +5,7 @@ import QtQuick
 // E-ink / e-paper grain overlay: a full-screen, click-through (mask: Region {})
 // layer above every window that tiles a monochrome speckle image so the whole
 // desktop reads like a paper display. Intensity follows root.noiseLevel (0 = off,
-// 1..5 = density). Like NervFrame, this is a single direct PanelWindow spanning
+// 1..5 = density). This is a single direct PanelWindow spanning
 // the full output so it truly fills the screen (the config runs one monitor).
 PanelWindow {
     id: grainFrame

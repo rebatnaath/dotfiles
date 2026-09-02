@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Switch the active bar mode from the command line.
-# Usage: bar-switch <fox|lonely|nerv>
+# Usage: bar-switch <fox|lonely>
 set -euo pipefail
 
 QS_BAR="$HOME/.config/quickshell/bar"
@@ -8,14 +8,14 @@ SETTINGS_JS="$QS_BAR/settings.js"
 SCRIPTS="$HOME/.config/sway/scripts"
 
 if [[ $# -ne 1 ]]; then
-    echo "Usage: bar-switch <fox|lonely|nerv>"
+    echo "Usage: bar-switch <fox|lonely>"
     exit 1
 fi
 
 NEW_BAR="$1"
 
-if [[ ! "$NEW_BAR" =~ ^(fox|lonely|nerv)$ ]]; then
-    echo "Error: invalid bar mode '$NEW_BAR'. Must be: fox, lonely, or nerv"
+if [[ ! "$NEW_BAR" =~ ^(fox|lonely)$ ]]; then
+    echo "Error: invalid bar mode '$NEW_BAR'. Must be: fox or lonely"
     exit 1
 fi
 

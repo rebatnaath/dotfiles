@@ -2,7 +2,7 @@
 var SETTINGS = {
     borderWidth: 4,
     cornerRadius: 0,
-    barSide: "top",
+    barSide: "bottom",
     fontFamily: "GeistMono NFM",
     barBorder: false,
     barShadow: false,

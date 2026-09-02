@@ -11,11 +11,8 @@ Item {
     property real cornerRadius: 0
 
     // Defaults to a translucent accent; callers (e.g. the lonely bar) may
-    // override it to match their face colour. In nerv mode the accent border is
-    // solid so it matches the bar/frame/window borders' solid red.
-    property color frameColor: root.activeBar === "nerv"
-        ? root.getColor("accent", "#ffb691")
-        : root.withAlpha(root.getColor("accent", "#ffb691"), 0.25)
+    // override it to match their face colour.
+    property color frameColor: root.withAlpha(root.getColor("accent", "#ffb691"), 0.25)
 
     anchors.fill: parent
 

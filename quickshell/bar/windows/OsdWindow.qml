@@ -14,19 +14,17 @@ PanelWindow {
     aboveWindows: true
     exclusionMode: ExclusionMode.Ignore
     // Pop up in the top-right corner (below the bar) when the bar sits on
-    // top, when the bar is full-width, or in nerv mode; bottom-right otherwise.
-    readonly property bool atTop: (root.activeBar === "nerv"
-        || root.barSide === "top" || root.barFullWidth)
+    // top or when the bar is full-width; bottom-right otherwise.
+    readonly property bool atTop: (root.barSide === "top" || root.barFullWidth)
     anchors {
         top: atTop
         bottom: !atTop
         right: true
     }
     margins {
-        top: atTop ? (root.activeBar === "nerv" ? 36 * root.uiScale
-            : (root.barFullWidth ? 62 * root.uiScale : 9 * root.uiScale)) : 0
+        top: atTop ? (root.barFullWidth ? 62 * root.uiScale : 9 * root.uiScale) : 0
         bottom: atTop ? 0 : 9 * root.uiScale
-        right: (root.activeBar === "nerv" ? (root.windowGap + 8) : root.windowGap) * root.uiScale
+        right: root.windowGap * root.uiScale
     }
     implicitWidth: osdCard.implicitWidth
     implicitHeight: osdCard.implicitHeight + 8
@@ -50,7 +48,7 @@ PanelWindow {
         blur: 0
         spread: 0
         offset: Qt.vector2d(8, 8)
-        visible: root.osdShadow && root.activeBar !== "nerv"
+        visible: root.osdShadow
     }
 
     Rectangle {

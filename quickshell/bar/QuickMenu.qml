@@ -14,7 +14,6 @@ PanelWindow {
     // typed into (PanelWindow defaults to focusable: false, which silently
     // sends keystrokes to whatever app is behind the menu).
     focusable: true
-    // nerv uses the same control center with red theme.
     visible: root.isQuickMenuOpen
     anchors { top: true; left: true; right: true; bottom: true }
     margins { top: 0; bottom: 0; left: 0; right: 0 }
@@ -108,10 +107,7 @@ PanelWindow {
             }
             // Fallback: hardcoded positions.
             var barBottom, barTop
-            if (root.activeBar === "nerv") {
-                barBottom = 76 * root.uiScale
-                barTop = screenH - 86 * root.uiScale
-            } else if (root.barFullWidth) {
+            if (root.barFullWidth) {
                 barBottom = (root.barShadow ? 54 : 46) * root.uiScale
                 barTop = screenH - (root.barShadow ? 54 : 46) * root.uiScale
             } else {

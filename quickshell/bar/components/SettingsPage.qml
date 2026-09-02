@@ -154,7 +154,7 @@ Flickable {
             spacing: 10 * root.uiScale
 
             PillButton {
-                width: (parent.width - 20) / 3
+                width: (parent.width - 10) / 2
                 labelText: "Fox"
                 isChecked: root.activeBar === "fox"
                 onClicked: {
@@ -164,21 +164,11 @@ Flickable {
             }
 
             PillButton {
-                width: (parent.width - 20) / 3
+                width: (parent.width - 10) / 2
                 labelText: "Lonely"
                 isChecked: root.activeBar === "lonely"
                 onClicked: {
                     root.activeBar = "lonely"
-                    root.saveRiceSettings()
-                }
-            }
-
-            PillButton {
-                width: (parent.width - 20) / 3
-                labelText: "Nerv"
-                isChecked: root.activeBar === "nerv"
-                onClicked: {
-                    root.activeBar = "nerv"
                     root.saveRiceSettings()
                 }
             }
@@ -202,22 +192,12 @@ Flickable {
 
         Text {
             width: parent.width
-            text: "NERV is a locked theme — the bar, quick menu and OSD settings below are disabled while it is active."
-            font.family: root.fontFamily
-            font.pixelSize: 11 * root.uiScale
-            font.italic: true
-            color: root.getColor("muted", "#a08d85")
-            wrapMode: Text.WordWrap
-            visible: root.activeBar === "nerv"
-        }
+        // ---- Panel settings ----------------------------------------------
 
-        // Everything from Panels down is only editable for the fox/lonely
-        // themes; choosing nerv fixes the display options instead.
         Column {
             id: panelSettings
             width: parent.width
             spacing: 12
-            visible: root.activeBar !== "nerv"
 
         // ---- Panel settings ----------------------------------------------
 

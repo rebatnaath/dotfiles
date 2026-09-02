@@ -12,9 +12,7 @@ import QtQuick.Effects
 // capture them into the content area; only genuine variant content ends up as
 // children.
 //
-// Defaults match the fox bar. The lonely bar overrides the face/border colours;
-// the nerv bar keeps its own file because its fixed inset margins, no-shadow
-// look and always-on 3px red border are genuinely a different layout.
+// Defaults match the fox bar. The lonely bar overrides the face/border colours.
 PanelWindow {
     id: barFace
 

@@ -14,11 +14,10 @@ PanelWindow {
     aboveWindows: true
     exclusionMode: ExclusionMode.Ignore
     // Vertically at the top when the bar is on top or is full-width; horizontally
-    // on the right when full-width or nerv (nerv shares the top-right under the
-    // OSD). Non-full-width top bar keeps notifications top-left beside the bar.
-    readonly property bool atTop: (root.activeBar === "nerv"
-        || root.barSide === "top" || root.barFullWidth)
-    readonly property bool atRight: (root.activeBar === "nerv" || root.barFullWidth)
+    // on the right when full-width. Non-full-width top bar keeps notifications
+    // top-left beside the bar.
+    readonly property bool atTop: (root.barSide === "top" || root.barFullWidth)
+    readonly property bool atRight: root.barFullWidth
     anchors {
         top: atTop
         bottom: !atTop
@@ -26,14 +25,12 @@ PanelWindow {
         left: !atRight
     }
     margins {
-        top: atTop ? (root.activeBar === "nerv" ? 36 * root.uiScale
-            : (root.barFullWidth ? 62 * root.uiScale : 9 * root.uiScale)) : 0
+        top: atTop ? (root.barFullWidth ? 62 * root.uiScale : 9 * root.uiScale) : 0
         bottom: atTop ? 0 : 9 * root.uiScale
         left: atRight ? 0 : root.windowGap
-        right: atRight ? (root.activeBar === "nerv" ? (root.windowGap + 8) * root.uiScale : root.windowGap) : 0
+        right: atRight ? root.windowGap : 0
     }
-    // Width matches the OSD (in nerv the shadow is hidden, so there is no +8
-    // extra room here — mirroring the OSD keeps both panes pixel-aligned).
+    // Width matches the OSD — mirroring the OSD keeps both panes pixel-aligned.
     implicitWidth: notificationPopup.cardWidth
     implicitHeight: popupList.contentHeight
     visible: notificationPopupModel.count > 0
@@ -63,7 +60,7 @@ PanelWindow {
                 blur: 0
                 spread: 0
                 offset: Qt.vector2d(8, 8)
-                visible: root.osdShadow && root.activeBar !== "nerv"
+                visible: root.osdShadow
             }
 
             Rectangle {
