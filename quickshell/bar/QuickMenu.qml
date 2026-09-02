@@ -98,23 +98,20 @@ PanelWindow {
             : Quickshell.screens[0].width - root.barSideMargin - 12 * root.uiScale - menuCard.width
         y: {
             var screenH = Quickshell.screens[0].height
-            // Each bar is a PanelWindow. Its bottom/top edge on screen is:
-            //   top bar:    marginTop + implicitHeight
-            //   bottom bar: screenH - marginBottom - implicitHeight
-            // The menu sits flush against that edge.
-            var mTop, mBottom, implH
+            // Position relative to the bar's FACE bottom/top, not the window.
+            // Each bar is a PanelWindow; the face sits inside it.
+            var faceH, mTop, mBottom
             if (root.activeBar === "nerv") {
-                mTop = 16; mBottom = 26; implH = 68
+                faceH = 60; mTop = 16; mBottom = 26
             } else if (root.barFullWidth) {
-                mTop = 0; mBottom = 0; implH = 46
+                faceH = 46; mTop = 0; mBottom = 0
             } else {
-                mTop = 9; mBottom = 9
-                implH = 46 + (root.barShadow ? 8 : 0)
+                faceH = 46; mTop = 9; mBottom = 9
             }
             if (root.barSide === "top") {
-                return (mTop + implH) * root.uiScale
+                return (mTop + faceH) * root.uiScale
             } else {
-                return Math.max(0, screenH - (mBottom + implH) * root.uiScale - menuCard.height)
+                return Math.max(0, screenH - (mBottom + faceH) * root.uiScale - menuCard.height)
             }
         }
         width: 400 * root.uiScale
