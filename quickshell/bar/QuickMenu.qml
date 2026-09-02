@@ -98,21 +98,21 @@ PanelWindow {
             : Quickshell.screens[0].width - root.barSideMargin - 12 * root.uiScale - menuCard.width
         y: {
             var screenH = Quickshell.screens[0].height
-            // Position relative to the bar's FACE bottom/top, not the window.
-            // Each bar is a PanelWindow; the face sits inside it.
-            var faceH, mTop, mBottom
+            // Hardcoded face positions per bar type.
+            // nerv: face=60px, margin=16/26, no shadow
+            // fox/lonely: face=46px, margin=9, shadow=8 when enabled
+            var barBottom, barTop
             if (root.activeBar === "nerv") {
-                faceH = 60; mTop = 16; mBottom = 26
+                barBottom = 76 * root.uiScale
+                barTop = screenH - 86 * root.uiScale
             } else if (root.barFullWidth) {
-                faceH = 46; mTop = 0; mBottom = 0
+                barBottom = (root.barShadow ? 54 : 46) * root.uiScale
+                barTop = screenH - (root.barShadow ? 54 : 46) * root.uiScale
             } else {
-                faceH = 46; mTop = 9; mBottom = 9
+                barBottom = (root.barShadow ? 63 : 55) * root.uiScale
+                barTop = screenH - (root.barShadow ? 63 : 55) * root.uiScale
             }
-            if (root.barSide === "top") {
-                return (mTop + faceH) * root.uiScale
-            } else {
-                return Math.max(0, screenH - (mBottom + faceH) * root.uiScale - menuCard.height)
-            }
+            return root.barSide === "top" ? barBottom : Math.max(0, barTop - menuCard.height)
         }
         width: 400 * root.uiScale
         // Constant height across all pages: the main content (system controls,
