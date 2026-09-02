@@ -16,11 +16,6 @@ PanelWindow {
     aboveWindows: true
     exclusionMode: ExclusionMode.Auto
 
-    Component.onCompleted: {
-        root.barHeight = 68 * root.uiScale
-        root.barEdge = root.barHeight + (root.barSide === "top" ? 16 : 26) * root.uiScale
-    }
-
     // Float the bar inset from the screen edges so it sits clear of the NERV
     // frame, with a visible top/bottom gap and generous side margins.
     margins {
