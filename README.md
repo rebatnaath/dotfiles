@@ -100,44 +100,6 @@ see [Keybindings](#keybindings)). You can tweak which control-menu pages appear
 and how things behave; the pages and hotkeys live in
 `quickshell/bar/QuickMenu.qml`.
 
-## Keybindings
-
-`$mod` is `Mod4` (the Windows / Super key). The important ones:
-
-| Keybinding           | Action                                                      |
-|----------------------|-------------------------------------------------------------|
-| `$mod+Return`        | Open terminal (kitty)                                       |
-| `$mod+Shift+Return`  | Open terminal in floating mode                              |
-| `$mod+E`             | File manager (nautilus)                                     |
-| `$mod+R`             | App launcher (rofi)                                         |
-| `$mod+Q`             | Close focused window                                        |
-| `$mod+V`             | Toggle floating                                             |
-| `$mod+W`             | Wallpaper picker                                            |
-| `$mod+Shift+W`       | Theme-switch (recolour from wallpaper)                      |
-| `$mod+Shift+S`       | Region screenshot (saves + copies to clipboard)             |
-| `$mod+Shift+F10`     | Full-screen screenshot (saves + copies to clipboard)        |
-| `$mod+M`             | Power menu                                                  |
-| `$mod+n`             | Notifications                                               |
-| `$mod+Shift+v`       | Clipboard history                                           |
-| `$mod+Shift+i`       | Tweaks / settings                                           |
-| `$mod+b`             | Toggle bar visibility                                       |
-| `$mod+l`             | Lock screen                                                 |
-| `$mod+F10` / `Print` | Toggle screen recording                                     |
-| `$mod+Shift+R`       | Reload sway config                                          |
-| `$mod+Shift+X`       | Exit sway                                                   |
-| `$mod+1`…`$mod+0`    | Switch to workspace 1–10                                    |
-| `$mod+Shift+1`…`0`   | Move container to workspace 1–10                            |
-| `$mod+J`             | Toggle layout split                                         |
-| `$mod+Left/Right/Up/Down` | Move floating window                                  |
-| `$mod+S`             | Show scratchpad                                             |
-| `$mod+Shift+minus`   | Move container to scratchpad                                |
-| `$mod+ScrollUp/Down` | Previous / next workspace                                   |
-| `XF86AudioRaise/LowerVolume` | Volume up/down (with OSD)                         |
-| `XF86AudioMute`      | Mute (with OSD)                                              |
-| `XF86AudioMicMute`   | Toggle microphone mute                                      |
-| `XF86MonBrightnessUp/Down` | Brightness up/down (with OSD)                     |
-| `XF86AudioNext/Play/Pause/Prev` | Playerctl media control                       |
-
 ## Install
 
 > **Warning:** The install script **overwrites** your existing configs for
@@ -192,6 +154,44 @@ them in `sway/walls/` and they'll appear in the picker.
   (file manager keybind)
 - **imv** (image viewer)
 
+## Keybindings
+
+`$mod` is `Mod4` (the Windows / Super key). The important ones:
+
+| Keybinding           | Action                                                      |
+|----------------------|-------------------------------------------------------------|
+| `$mod+Return`        | Open terminal (kitty)                                       |
+| `$mod+Shift+Return`  | Open terminal in floating mode                              |
+| `$mod+E`             | File manager (nautilus)                                     |
+| `$mod+R`             | App launcher (rofi)                                         |
+| `$mod+Q`             | Close focused window                                        |
+| `$mod+V`             | Toggle floating                                             |
+| `$mod+W`             | Wallpaper picker                                            |
+| `$mod+Shift+W`       | Theme-switch (recolour from wallpaper)                      |
+| `$mod+Shift+S`       | Region screenshot (saves + copies to clipboard)             |
+| `$mod+Shift+F10`     | Full-screen screenshot (saves + copies to clipboard)        |
+| `$mod+M`             | Power menu                                                  |
+| `$mod+n`             | Notifications                                               |
+| `$mod+Shift+v`       | Clipboard history                                           |
+| `$mod+Shift+i`       | Tweaks / settings                                           |
+| `$mod+b`             | Toggle bar visibility                                       |
+| `$mod+l`             | Lock screen                                                 |
+| `$mod+F10` / `Print` | Toggle screen recording                                     |
+| `$mod+Shift+R`       | Reload sway config                                          |
+| `$mod+Shift+X`       | Exit sway                                                   |
+| `$mod+1`…`$mod+0`    | Switch to workspace 1–10                                    |
+| `$mod+Shift+1`…`0`   | Move container to workspace 1–10                            |
+| `$mod+J`             | Toggle layout split                                         |
+| `$mod+Left/Right/Up/Down` | Move floating window                                  |
+| `$mod+S`             | Show scratchpad                                             |
+| `$mod+Shift+minus`   | Move container to scratchpad                                |
+| `$mod+ScrollUp/Down` | Previous / next workspace                                   |
+| `XF86AudioRaise/LowerVolume` | Volume up/down (with OSD)                         |
+| `XF86AudioMute`      | Mute (with OSD)                                              |
+| `XF86AudioMicMute`   | Toggle microphone mute                                      |
+| `XF86MonBrightnessUp/Down` | Brightness up/down (with OSD)                     |
+| `XF86AudioNext/Play/Pause/Prev` | Playerctl media control                       |
+
 ## GNOME widget extensions
 
 If you run GNOME (or have friends or family who do) and want a widget extension,
@@ -210,8 +210,6 @@ A few of the widgets it comes with:
     <td align="center"><a href="assets/music-large.svg"><img src="assets/music-large.svg" width="180"></a><br>Music</td>
   </tr>
 </table>
-
-
 
 If anything here errors or you can't get something working, open an issue on
 this repo and I'll do my best to help when I'm free.
