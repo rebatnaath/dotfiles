@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+export PATH="/run/current-system/sw/bin:/etc/profiles/per-user/oryza/bin:$PATH"
 action=$1
 players=$(busctl --user list 2>/dev/null | awk '{print $1}' | grep '^org\.mpris\.MediaPlayer2\.')
 for p in $players; do

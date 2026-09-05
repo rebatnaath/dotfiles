@@ -1,8 +1,7 @@
 import Quickshell.Widgets
 import QtQuick
 
-// Media player row: album art, track info, play/pause and next buttons.
-// Visible only while something is playing (set by the caller).
+// media player row (album art, controls)
 Row {
     id: mediaPlayerRow
 
@@ -16,6 +15,9 @@ Row {
     spacing: 12 * root.uiScale
     width: parent.width
     anchors.horizontalCenter: parent.horizontalCenter
+
+    // Art(56) + play(34) + next(34) + 3*12 spacing = 160
+    readonly property real reservedWidth: 160 * root.uiScale
 
     // Album art thumbnail
     Rectangle {
@@ -39,7 +41,7 @@ Row {
                 fillMode: Image.PreserveAspectCrop
                 smooth: true
                 asynchronous: true
-                cache: false
+                cache: true
                 visible: status === Image.Ready && mediaPlayerRow.artUrl !== ""
             }
 
@@ -57,8 +59,7 @@ Row {
     Column {
         anchors.verticalCenter: parent.verticalCenter
         spacing: 3 * root.uiScale
-        // 56px art + 34px play + 34px next + 4x12px spacing
-        width: parent.width - 172
+        width: parent.width - mediaPlayerRow.reservedWidth
 
         Text {
             text: mediaPlayerRow.mediaTitleText

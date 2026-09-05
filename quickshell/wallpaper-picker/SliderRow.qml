@@ -1,1 +1,0 @@
-../bar/components/SliderRow.qml

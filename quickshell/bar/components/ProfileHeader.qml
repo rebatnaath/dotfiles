@@ -2,20 +2,24 @@ import Quickshell
 import Quickshell.Widgets
 import QtQuick
 
-// QuickMenu header: profile picture + username on the left, and the wallpaper,
-// notification and power buttons on the right. Emits one signal per button so
-// the parent owns the page-switching logic.
+// profile header (picture + buttons)
 Item {
     id: profileHeader
 
     readonly property string userName: Quickshell.env("USER") || Quickshell.env("LOGNAME") || "user"
+    readonly property string hostName: {
+        var h = Quickshell.env("HOSTNAME")
+        if (!h) h = Quickshell.env("HOST")
+        return h || "nixos"
+    }
     readonly property string avatarUrl: "file:///var/lib/AccountsService/icons/" + userName
 
-    signal wallpaperRequested()
     signal notificationsRequested()
     signal powerMenuRequested()
     signal clipboardRequested()
     signal settingsRequested()
+    signal screenshotRequested()
+    signal caffeineRequested()
 
     width: parent.width
     height: 48 * root.uiScale
@@ -26,9 +30,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         spacing: 12 * root.uiScale
 
-        // Circle outline stays the same size; the photo is enlarged beyond it so
-        // it crops tighter (zoomed-in look). ClippingRectangle clips to the
-        // circle (plain `clip` only clips to a square).
+        // circle-clipped photo
         Rectangle {
             width: 48 * root.uiScale
             height: 48 * root.uiScale
@@ -65,7 +67,7 @@ Item {
             }
 
             Text {
-                text: "@nixos"
+                text: "@" + profileHeader.hostName
                 font.family: root.fontFamily
                 font.pixelSize: 11 * root.uiScale
                 color: root.getColor("muted", "#a08d85")
@@ -74,22 +76,12 @@ Item {
     }
 
     IconButton {
-        iconText: "\uF03E"
-        isActive: root.isWallpaperPageOpen
-        anchors.right: settingsButton.left
-        anchors.rightMargin: 8
-        anchors.verticalCenter: parent.verticalCenter
-        onClicked: profileHeader.wallpaperRequested()
-    }
-
-    IconButton {
-        id: settingsButton
-        iconText: "\uF013"
-        isActive: root.isSettingsPageOpen
+        id: screenshotButton
+        iconText: "\uF030"
         anchors.right: clipboardButton.left
         anchors.rightMargin: 8
         anchors.verticalCenter: parent.verticalCenter
-        onClicked: profileHeader.settingsRequested()
+        onClicked: profileHeader.screenshotRequested()
     }
 
     IconButton {

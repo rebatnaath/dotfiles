@@ -1,9 +1,7 @@
 import Quickshell.Io
 import QtQuick
 
-// Clipboard history page: compact list of recent clipboard entries, read from
-// cliphist. Click (left) copies the entry back to the clipboard and pastes it
-// once; right-click deletes the entry. Visibility is controlled by the caller.
+// clipboard history page (cliphist)
 Column {
     id: clipboardColumn
     spacing: 10 * root.uiScale
@@ -18,17 +16,21 @@ Column {
     }
 
     Process {
-        id: clipActionProc
+        id: clipCopyProc
     }
 
-    // Rebuild the model from `cliphist list`. Each line is "<index>\t<preview>".
+    Process {
+        id: clipDeleteProc
+    }
+
+    // parse cliphist list output
     function parseList(text) {
         var entries = []
         var lines = text.split("\n")
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i]
             if (line === "") continue
-            // Split on the first tab: before = cliphist index, after = preview.
+            // split on first tab: index + preview
             var tab = line.indexOf("\t")
             if (tab < 0) continue
             entries.push({
@@ -37,8 +39,7 @@ Column {
             })
         }
 
-        // Skip the rebuild when nothing changed, so the 2.5s poll doesn't wipe
-        // the viewport / scroll position out from under the user.
+        // skip rebuild if nothing changed
         if (entries.length === clipboardModel.count) {
             var same = true
             for (var j = 0; j < entries.length; j++) {
@@ -51,8 +52,7 @@ Column {
             if (same) return
         }
 
-        // Something changed: rebuild but keep the scroll position instead of
-        // jumping back to the top.
+        // rebuild, keep scroll position
         var scrollPos = clipboardList.contentY
         clipboardModel.clear()
         for (var k = 0; k < entries.length; k++) {
@@ -70,15 +70,16 @@ Column {
     }
 
     function copyEntry(entry) {
-        // Decode the exact entry and copy it to the clipboard so the user can
-        // paste it themselves (no auto-paste).
-        clipActionProc.command = ["bash", "-c", pathPrepend + " ; printf '%s' \"$1\" | cliphist decode | wl-copy 2>/dev/null; true", "clip", entry]
-        clipActionProc.startDetached()
+        // sanitize: numeric only
+        if (!/^\d+$/.test(entry)) return
+        clipCopyProc.command = ["bash", "-c", pathPrepend + " ; cliphist decode <<< \"$1\" | wl-copy 2>/dev/null", "clip", entry]
+        clipCopyProc.startDetached()
     }
 
     function deleteEntry(entry) {
-        clipActionProc.command = ["bash", "-c", pathPrepend + " ; printf '%s' \"$1\" | cliphist delete 2>/dev/null; true", "clip", entry]
-        clipActionProc.startDetached()
+        if (!/^\d+$/.test(entry)) return
+        clipDeleteProc.command = ["bash", "-c", pathPrepend + " ; printf '%s' \"$1\" | cliphist delete 2>/dev/null", "clip", entry]
+        clipDeleteProc.startDetached()
     }
 
     Row {
@@ -150,7 +151,7 @@ Column {
                     font.family: root.fontFamily
                     font.pixelSize: 10 * root.uiScale
                     color: root.getColor("fg", "#f0dfd8")
-                    // Single line, non-wrapping preview.
+                    // single-line preview
                     text: modelData.preview.replace(/\n/g, " ")
                 }
             }
@@ -175,12 +176,10 @@ Column {
 
     onVisibleChanged: if (visible) refresh()
 
-    // Keep the list live: re-poll while the page is open so new copies land in
-    // the list without having to close/reopen the panel. (cliphist daemon
-    // stores on every clipboard change; this mirrors it into the UI.)
+    // re-poll while page is open
     Timer {
         running: clipboardColumn.visible
-        interval: 2500
+        interval: 5000
         repeat: true
         onTriggered: clipboardColumn.refresh()
     }

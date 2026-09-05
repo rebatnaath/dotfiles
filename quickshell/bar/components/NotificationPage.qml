@@ -1,7 +1,6 @@
 import QtQuick
 
-// Notification history page: header with count + "Clear" button and a
-// dismissible list. Reads the shared notificationListModel (owned by shell.qml).
+// notification history page
 Column {
     id: notificationPageColumn
     spacing: 10 * root.uiScale
@@ -53,7 +52,7 @@ Column {
             visible: notificationListModel.count > 0
             opacity: clearArea.hovered ? 1.0 : 0.7
 
-            // Underline hint so it reads as a button.
+            // underline hint
             Rectangle {
                 anchors.left: parent.left
                 anchors.right: parent.right
@@ -83,6 +82,7 @@ Column {
 
         delegate: Rectangle {
             required property var modelData
+            required property int index
             width: ListView.view.width
             height: 52 * root.uiScale
             radius: 0
@@ -95,8 +95,7 @@ Column {
                 anchors.margins: 8
                 spacing: 8 * root.uiScale
 
-                // OSD-style icon box: accent-tinted square with a border around
-                // the app initial, matching the OSD popup card.
+                // app icon box
                 Rectangle {
                     id: appIconBox
                     width: 30 * root.uiScale
@@ -151,8 +150,7 @@ Column {
                     }
                 }
 
-                // Time on the right: fixed slot, right-aligned so it keeps a
-                // margin off the card edge regardless of layout timing.
+                // time (fixed slot)
                 Text {
                     id: timeText
                     width: 40 * root.uiScale
@@ -168,8 +166,7 @@ Column {
             MouseArea {
                 anchors.fill: parent
                 hoverEnabled: true
-                // Explicitly removing a history row (dismiss + drop from the
-                // model): closed notifications persist here until dismissed.
+                // dismiss + remove from model
                 onClicked: {
                     var item = notificationListModel.get(index)
                     if (item && item.notification) {

@@ -2,53 +2,53 @@ import Quickshell
 import QtQuick
 import QtQuick.Effects
 
-// Shared bar chrome: the floating PanelWindow + rounded face + hard offset
-// shadow + accent border that every bar variant uses, with per-bar colour /
-// size knobs. Bar-specific content is injected as the default property (child
-// objects) and fills the face, so each variant only describes its own layout.
-//
-// NOTE: the chrome nodes (content/face/shadow/border) are each assigned to a
-// property alias below purely so QML's default-property collector does not
-// capture them into the content area; only genuine variant content ends up as
-// children.
-//
-// Defaults match the fox bar. The lonely bar overrides the face/border colours.
+// Shared bar chrome: PanelWindow + rounded face + shadow + border.
+// Content injected as default property fills the face.
+// Chrome nodes aliased to properties so QML doesn't capture them into content.
+// Defaults match fox bar; lonely overrides face/border colours.
 PanelWindow {
     id: barFace
 
     // ---- Per-bar knobs --------------------------------------------------
     property real faceHeight: 46 * root.uiScale
     property color faceColor: root.getColor("bg", "#1a120e")
-    // Translucent accent outline (matches fox). Lonely overrides to a solid
-    // face-colour ring.
+    // accent border
     property color borderColor: root.withAlpha(root.getColor("accent", "#ffb691"), 0.25)
     property real borderThickness: 4 * root.uiScale
     property bool showBorder: root.barBorder
     property bool showShadow: root.barShadow && !root.barFullWidth
-    // Which screen edge the bar docks to; a variant can pin its own side
-    // independent of the global barSide setting.
+    // which screen edge to dock to
     property string side: root.barSide
-    // Anchor the left edge. Variants that must span the true full width
-    // turn this off and set faceWidth instead.
+    // anchor left edge (variants can disable for full-width)
     property bool anchorLeft: true
-    // Explicit window width when anchorLeft is off (-1 = stretch to anchors).
+    // explicit width when anchorLeft is off
     property real faceWidth: -1
-    // Side margin: floats the bar inset from the screen edge (kept even with
-    // the shadow off); full-width mode sits flush against the edge.
+    // side margin (0 when full-width)
     property real sideInset: root.barFullWidth ? 0 : root.barSideMargin
-    // Vertical margins: clear of the screen edge when not full-width.
+    // vertical margins (clear of screen edge)
     property real marginTop: (side === "top" && !root.barFullWidth ? 9 : 0) * root.uiScale
     property real marginBottom: (side === "bottom" && !root.barFullWidth ? 9 : 0) * root.uiScale
+    Connections {
+        target: root
+        function onBarFullWidthChanged() { barFace.refreshMargins() }
+        function onUiScaleChanged() { barFace.refreshMargins() }
+    }
+    function refreshMargins() {
+        margins.top = barFace.marginTop
+        margins.bottom = barFace.marginBottom
+        margins.left = barFace.sideInset * root.uiScale
+        margins.right = barFace.sideInset * root.uiScale
+    }
 
     default property alias content: contentArea.data
 
-    // Chrome back-references that keep the internals out of `content` (see note).
+    // chrome back-references
     property alias contentLayer: contentArea
     property alias shadowLayer: shadowRect
     property alias faceLayer: face
     property alias borderLayer: border
 
-    // Face height + 8px shadow room when one is shown.
+    // height + shadow room
     implicitHeight: barFace.faceHeight + (barFace.showShadow ? 8 : 0) * root.uiScale
     implicitWidth: barFace.faceWidth
     anchors { left: anchorLeft; right: true; bottom: side === "bottom"; top: side === "top" }
@@ -61,18 +61,11 @@ PanelWindow {
         left: sideInset * root.uiScale
         right: sideInset * root.uiScale
     }
+    onSideChanged: refreshMargins()
 
-    // Expose face edges in screen coordinates for menu positioning.
-    readonly property real faceTop: side === "top"
-        ? marginTop + (showShadow && !root.barFullWidth ? 8 : 0) * root.uiScale
-        : Quickshell.screens[0].height - marginBottom - faceHeight - (showShadow && !root.barFullWidth ? 8 : 0) * root.uiScale
-    readonly property real faceBottom: side === "top"
-        ? marginTop + (showShadow && !root.barFullWidth ? 8 : 0) * root.uiScale + faceHeight
-        : Quickshell.screens[0].height - marginBottom
+    Component.onCompleted: refreshMargins()
 
-    // Hard offset shadow cast toward the trailing edge: below the bar at the
-    // bottom, above it at the top. The face is inset from that edge so the
-    // shadow has room to show.
+    // hard offset shadow
     RectangularShadow {
         id: shadowRect
         anchors.fill: face
@@ -89,9 +82,10 @@ PanelWindow {
         height: barFace.faceHeight
         radius: root.frameRadius
         color: barFace.faceColor
+        opacity: barFace.visible ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 200 } }
 
-        // Anchored to the trailing edge with an 8px gap for the shadow when
-        // one is shown; flush otherwise.
+        // anchored to trailing edge with shadow gap
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.rightMargin: (barFace.showShadow && !root.barFullWidth ? 8 : 0) * root.uiScale
@@ -100,9 +94,7 @@ PanelWindow {
         anchors.bottom: barFace.side === "bottom" ? parent.bottom : undefined
         anchors.bottomMargin: (barFace.side === "bottom" && barFace.showShadow && !root.barFullWidth ? 8 : 0) * root.uiScale
 
-        // Bar-unique content. Drawn before the border ring so a variant that
-        // extends fills to the face edges (e.g. lonely) still shows the border
-        // on top, exactly like the non-shared bars did.
+        // variant content (drawn before border)
         Item {
             id: contentArea
             anchors.fill: parent

@@ -4,7 +4,6 @@ import Quickshell.Io
 import Quickshell.Services.Notifications
 import QtQuick
 import "colors.js" as Colors
-import "settings.js" as Settings
 import "windows"
 import "fox"
 import "lonely"
@@ -12,23 +11,14 @@ ShellRoot {
     id: root
 
     // ---- Theme helpers -------------------------------------------------
-    // Colors are reactive properties (not the cached .pragma library), so
-    // theme-switch can hot-reload them via IPC (applyColors) without a full
-    // quickshell restart. Each getColor() call reads one of these properties;
-    // QML tracks those reads, so any binding calling getColor re-evaluates
-    // when the live palette is swapped.
 
-    // my config dirs; QML won't expand $HOME so pull it from env
     readonly property string homeDir: Quickshell.env("HOME")
     property string qsBarDir: homeDir + "/.config/quickshell/bar"
     property string swayScriptsDir: homeDir + "/.config/sway/scripts"
 
-    // Path to the generated palette. Kept in sync with theme-switch.
     readonly property string colorsPath: qsBarDir + "/colors.js"
 
-    // Initial palette from colors.js (first-load import). applyColors() later
-    // re-reads the file and moves these. Stored as hex strings (not `color`)
-    // so the existing withAlpha()/mixHex() helpers keep receiving #rrggbb.
+    // palette from colors.js, reloaded by applyColors()
     property string colorBg: Colors.COLORS.bg
     property string colorFg: Colors.COLORS.fg
     property string colorAccent: Colors.COLORS.accent
@@ -36,29 +26,27 @@ ShellRoot {
     property string colorSurfaceVariant: Colors.COLORS.surface_variant
     property string colorMuted: Colors.COLORS.muted
 
-    // ---- Rice settings (visual tokens) ----------------------------------
-    // Read from settings.js at load; the settings page edits these reactive
-    // properties live and calls saveRiceSettings() to persist to sway + disk.
+    // ---- Bar visual properties (synced from settings.js) ----------------
 
-    property int borderWidth: Settings.SETTINGS.borderWidth
+    property int borderWidth: 4
     readonly property bool borderEnabled: borderWidth > 0
-    property int cornerRadius: Settings.SETTINGS.cornerRadius
-    property string barSide: Settings.SETTINGS.barSide
-    property string fontFamily: Settings.SETTINGS.fontFamily
-    property bool barBorder: Settings.SETTINGS.barBorder
-    property bool barShadow: Settings.SETTINGS.barShadow
-    property bool quickMenuBorder: Settings.SETTINGS.quickMenuBorder
-    property bool quickMenuShadow: Settings.SETTINGS.quickMenuShadow
-    property bool osdBorder: Settings.SETTINGS.osdBorder
-    property bool osdShadow: Settings.SETTINGS.osdShadow
-    property string activeBar: Settings.SETTINGS.activeBar
-    property bool barFullWidth: Settings.SETTINGS.barFullWidth
-    property bool nightLight: Settings.SETTINGS.nightLight
-    property int nightLightIntensity: Settings.SETTINGS.nightLightIntensity || 3
-    property int noiseLevel: Settings.SETTINGS.noiseLevel
+    property int cornerRadius: 8
+    property int innerRadius: 4
+    property string barSide: "bottom"
+    property string fontFamily: "GeistMono NFM"
+    property bool barBorder: true
+    property bool barShadow: true
+    property bool quickMenuBorder: true
+    property bool quickMenuShadow: true
+    property bool osdBorder: true
+    property bool osdShadow: true
+    property string activeBar: "fox"
+    property bool barFullWidth: false
+    property bool nightLight: false
+    property int nightLightIntensity: 3
+    property int noiseLevel: 0
+    property bool isCaffeineEnabled: false
 
-    // Corner radius applied to the bar / quick menu / OSD / notification faces.
-    // Independent of the sway window border (corner_radius is per-window there).
     readonly property int frameRadius: cornerRadius
 
     FileView {
@@ -66,11 +54,11 @@ ShellRoot {
         path: qsBarDir + "/settings.js"
         preload: true
         blockAllReads: true
-        watchChanges: false
+        watchChanges: true
+        onFileChanged: settingsFile.reload()
+        onTextChanged: root.parseRiceSettings()
     }
 
-    // Parse settings.js into the reactive properties. Callers are responsible
-    // for the file being already reloaded (see pollRiceSettings).
     function parseRiceSettings(): void {
         var raw = settingsFile.text()
         function boolValue(key, current) {
@@ -87,6 +75,7 @@ ShellRoot {
         }
         borderWidth = intValue("borderWidth", borderWidth)
         cornerRadius = intValue("cornerRadius", cornerRadius)
+        innerRadius = intValue("innerRadius", innerRadius)
         barSide = stringValue("barSide", barSide)
         fontFamily = stringValue("fontFamily", fontFamily)
         barBorder = boolValue("barBorder", barBorder)
@@ -102,36 +91,25 @@ ShellRoot {
         nightLightIntensity = intValue("nightLightIntensity", nightLightIntensity)
     }
 
-    // Poll the on-disk settings.js so changes saved by the wallpaper-picker (a
-    // separate process) reach this bar live. Cheap: only re-parses on change.
-    property string riceHash: ""
-    function pollRiceSettings(): void {
-        settingsFile.reload()
-        var t = settingsFile.text()
-        if (t === riceHash) return
-        riceHash = t
-        parseRiceSettings()
-    }
-
-    Timer {
-        interval: 400
-        repeat: true
-        running: true
-        onTriggered: root.pollRiceSettings()
+    Process {
+        id: nightLightApplyProc
+        onExited: (code, status) => {
+            if (code !== 0) console.warn("[bar] nightlight-apply failed:", code)
+        }
     }
 
     Process {
-        id: riceSettingsProc
+        id: nightLightStartupProc
+        onExited: (code, status) => {
+            if (code !== 0) console.warn("[bar] nightlight-toggle startup failed:", code)
+        }
     }
 
-    // Persist the current reactive tokens to sway + disk via the bridge script.
-    function saveRiceSettings(): void {
-        riceSettingsProc.command = ["bash", swayScriptsDir + "/rice-settings-apply",
-            borderWidth + "", cornerRadius + "", barSide, fontFamily,
-            barBorder + "", barShadow + "", quickMenuBorder + "", quickMenuShadow + "",
-            osdBorder + "", osdShadow + "", barFullWidth + "", activeBar,
-            nightLight + "", noiseLevel + "", nightLightIntensity + ""]
-        riceSettingsProc.startDetached()
+    Process {
+        id: noiseApplyProc
+        onExited: (code, status) => {
+            if (code !== 0) console.warn("[bar] noise-apply failed:", code)
+        }
     }
 
     function getColor(key, fallback) {
@@ -146,8 +124,7 @@ ShellRoot {
         }
     }
 
-    // Parse a fresh palette from colors.js (avoids the .pragma library cache)
-    // and push it into the reactive properties above.
+    // reload palette from colors.js
     function applyColors(): void {
         colorsFile.reload()
         var raw = colorsFile.text()
@@ -168,17 +145,20 @@ ShellRoot {
         path: root.colorsPath
         preload: true
         blockAllReads: true
-        watchChanges: false
+        watchChanges: true
+        onFileChanged: colorsFile.reload()
+        onTextChanged: root.applyColors()
     }
 
     function withAlpha(colorHex, alpha) {
+        if (!colorHex || colorHex.length < 7) return Qt.rgba(0, 0, 0, alpha)
         var r = parseInt(colorHex.substring(1, 3), 16)
         var g = parseInt(colorHex.substring(3, 5), 16)
         var b = parseInt(colorHex.substring(5, 7), 16)
         return Qt.rgba(r / 255, g / 255, b / 255, alpha)
     }
 
-    // Relative-luminance of a #rrggbb string.
+    // relative luminance of #rrggbb
     function luminance(colorHex) {
         var r = parseInt(colorHex.substring(1, 3), 16) / 255
         var g = parseInt(colorHex.substring(3, 5), 16) / 255
@@ -186,17 +166,7 @@ ShellRoot {
         return 0.2126 * r + 0.7152 * g + 0.0722 * b
     }
 
-    // Darkest of the live palette colors.
-    readonly property string darkestColor: {
-        var best = colorBg
-        var cands = [colorBg, colorFg, colorAccent, colorSecondary, colorSurfaceVariant, colorMuted]
-        for (var i = 1; i < cands.length; i++)
-            if (luminance(cands[i]) < luminance(best)) best = cands[i]
-        return best
-    }
-
-    // Blend two hex colors into an opaque color. amount is how much of the
-    // second color (e.g. accent) is mixed into the first (e.g. bg).
+    // blend two hex colors
     function mixHex(baseHex, accentHex, amount) {
         var r1 = parseInt(baseHex.substring(1, 3), 16)
         var g1 = parseInt(baseHex.substring(3, 5), 16)
@@ -205,7 +175,8 @@ ShellRoot {
         var g2 = parseInt(accentHex.substring(3, 5), 16)
         var b2 = parseInt(accentHex.substring(5, 7), 16)
         function h(n) {
-            var s = Math.round(n).toString(16)
+            var v = Math.max(0, Math.min(255, Math.round(n)))
+            var s = v.toString(16)
             return s.length < 2 ? "0" + s : s
         }
         return "#" + h(r1 + (r2 - r1) * amount) + h(g1 + (g2 - g1) * amount) + h(b1 + (b2 - b1) * amount)
@@ -214,21 +185,21 @@ ShellRoot {
     // ---- System state --------------------------------------------------
 
     property string wifiName: ""
+    property bool wifiEnabled: false
     property bool isWifiConnecting: false
-    property bool isWifiHovered: false
     property bool bluetoothEnabled: false
     property string bluetoothDeviceName: ""
     property bool isBluetoothConnecting: false
     property bool isDndEnabled: false
-    property bool isNightLightEnabled: Settings.SETTINGS.nightLight
+    readonly property bool isNightLightEnabled: nightLight
     property int volume: -1
     property bool isVolumeMuted: false
-    property bool isVolumeHovered: false
     property bool isVolumeDragging: false
+    // Accumulated scroll delta for volume control. Clamped to [-600, 600]
+    // in BottomSection so max 5 notches (25% volume) per debounce cycle.
     property int wheelAccum: 0
     property string dateText: ""
     property string timeText: ""
-    // "22 aug 11:55" style timestamp.
     property string dateTimeText: ""
     property string windowTitle: ""
     property string mediaStatus: "None"
@@ -239,22 +210,17 @@ ShellRoot {
     property bool isClockHovered: false
     property int batteryLevel: -1
     property string batteryStatus: "Unknown"
-    property bool isBatteryHovered: false
     property int brightnessLevel: -1
     property bool isQuickMenuOpen: false
     property bool isPowerPageOpen: false
     property bool isNotificationPageOpen: false
-    property bool isWallpaperPageOpen: false
     property bool isClipboardPageOpen: false
-    property bool isSettingsPageOpen: false
     onIsQuickMenuOpenChanged: if (!isQuickMenuOpen) root.closeAllPages()
 
     function closeAllPages() {
         isPowerPageOpen = false
         isNotificationPageOpen = false
-        isWallpaperPageOpen = false
         isClipboardPageOpen = false
-        isSettingsPageOpen = false
     }
 
     // ---- Notifications -------------------------------------------------
@@ -262,9 +228,6 @@ ShellRoot {
     NotificationServer {
         id: notificationServer
         keepOnReload: true
-        // Advertise the full capability set so Chrome/Firefox/Zen use the OS
-        // path instead of their in-app fallback (they require at least
-        // "actions" + "body" from GetCapabilities).
         actionsSupported: true
         actionIconsSupported: true
         bodySupported: true
@@ -278,8 +241,6 @@ ShellRoot {
             }
             notification.tracked = true
             notification.closed.connect(() => {
-                // A closed notification only leaves the transient popup; the
-                // quick-menu history keeps it until the user dismisses it.
                 for (var p = 0; p < notificationPopupModel.count; p++) {
                     if (notificationPopupModel.get(p).notification === notification) {
                         notificationPopupModel.remove(p)
@@ -317,42 +278,28 @@ ShellRoot {
 
     // ---- Bar geometry + workspaces -------------------------------------
 
-    // Bar floats centered at 60% of the screen width (20% side margins).
+    // TODO: Multi-monitor support — currently pinned to first screen.
+    // Quickshell doesn't expose "which screen is this window on" from QML,
+    // so we default to screens[0]. To support multi-monitor, the bar would
+    // need to be launched per-output with a screen identifier.
     readonly property real barSideMargin: Quickshell.screens[0].width * 0.2
 
-    // Reference to the loaded bar for menu positioning.
-    property Item barItem: null
+    property real barFaceHeight: 46 * root.uiScale
 
-    // DPI-based UI scale. logicalPixelDensity is pixels-per-mm; convert to
-    // logical dots-per-inch and gauge against the standard 96 DPI. Clamped so
-    // tiny/low-DPI screens don't collapse and hi-DPI screens don't explode.
-    // Every fixed pixel value multiplies by this so the UI flexes with the
-    // display resolution instead of staying 1080p-sized.
     readonly property real uiScale: {
         var screen = Quickshell.screens[0]
-        var dpi = (screen.logicalPixelDensity * 25.4) / 96
+        // logicalPixelDensity may be undefined on some Wayland compositors
+        var density = screen.logicalPixelDensity || (screen.height / (screen.height / 96))
+        var dpi = (density * 25.4) / 96
         return Math.max(0.7, Math.min(2.0, dpi))
     }
-    // Distance from the screen edge to a tiled window's edge (= `gaps outer` +
-    // `gaps inner`, read live from sway via pollGaps). The OSD/notification
-    // panels align to a tiled window's left/right edges with this gap, so it is
-    // reactive: if sway's gaps change, the panels stay aligned. Defaults to 35
-    // (the classic outer 30 + inner 5) until the first poll succeeds.
+    // sway gaps (outer + inner), polled from sway
     property int windowGap: 35
-    // Icon center offsets from the bar's right edge (box padding + half icon),
-    // used to position the hover tips above their icons.
-    readonly property int wifiIconCenterFromBarRight: 18
-    readonly property int volumeIconCenterFromBarRight: 46
-    readonly property int batteryIconCenterFromBarRight: 74
-    // Clock box center offset from the bar's left edge (12px left margin +
-    // half of the 58px box).
     readonly property int clockCenterFromBarLeft: 41
 
     ListModel { id: workspaceModel }
 
-    // Workspace indicators: active ws -> filled, ws with windows -> outlined.
-    // Sway destroys empty workspaces, so the I3 model only holds workspaces
-    // that are focused or contain windows.
+    // rebuild workspace list from i3
     function updateWorkspaces() {
         var workspaces = I3.workspaces.values
         var list = []
@@ -370,8 +317,11 @@ ShellRoot {
     Connections {
         target: I3
         function onRawEvent(event) { root.updateWorkspaces() }
-        function onFocusedWorkspaceChanged() { root.updateWorkspaces() }
     }
+
+    // Battery level is also monitored by sway/scripts/battery-notify (started
+    // from sway config) which fires low-battery alerts. The bar only displays
+    // the level; the alert daemon is independent.
 
     // ---- Polling and toggles -------------------------------------------
 
@@ -379,16 +329,18 @@ ShellRoot {
         wifiNameProc.exec([swayScriptsDir + "/wifi-name"])
     }
 
-    // Flip the wifi state optimistically, then re-poll so the icon/name catch
-    // up once NetworkManager settles (re-enabling + reconnecting takes a moment).
     function toggleWifi() {
         var turningOn = root.wifiName === ""
         root.isWifiConnecting = turningOn
         wifiToggleProc.command = [swayScriptsDir + "/wifi-toggle"]
         wifiToggleProc.startDetached()
         root.wifiName = ""
-        if (turningOn)
+        if (turningOn) {
+            root.wifiEnabled = true
             wifiConnectTimeout.restart()
+        } else {
+            root.wifiEnabled = false
+        }
         wifiVerify.restart()
         wifiResync.restart()
     }
@@ -397,7 +349,6 @@ ShellRoot {
         bluetoothProc.exec([swayScriptsDir + "/bluetooth-status"])
     }
 
-    // Flip bluetooth state optimistically, then re-poll once bluez settles.
     function toggleBluetooth() {
         var turningOn = !root.bluetoothEnabled
         root.isBluetoothConnecting = turningOn
@@ -419,35 +370,37 @@ ShellRoot {
     }
 
     function toggleNightLight() {
-        root.isNightLightEnabled = !root.isNightLightEnabled
-        root.nightLight = root.isNightLightEnabled
-        // Persist + apply via the lightweight script (no sway reload), so
-        // toggling doesn't reset gamma or re-render the wallpaper.
-        var mode = root.isNightLightEnabled ? "on" : "off"
-        nightLightProc.command = [swayScriptsDir + "/nightlight-apply", mode, root.nightLightIntensity + ""]
-        nightLightProc.startDetached()
+        root.nightLight = !root.nightLight
+        nightLightApplyProc.command = ["bash", swayScriptsDir + "/nightlight-apply",
+            root.nightLight ? "on" : "off", root.nightLightIntensity + ""]
+        nightLightApplyProc.running = true
     }
 
-    // Persist + apply a new intensity seamlessly without the full rice save.
-    // Debounced so rapid slider input coalesces into a single apply.
+    function toggleCaffeine() {
+        root.isCaffeineEnabled = !root.isCaffeineEnabled
+        caffeineProc.command = ["bash", "-c", root.isCaffeineEnabled
+            ? "touch $HOME/.cache/caffeine-active; pkill swayidle 2>/dev/null || true"
+            : "rm -f $HOME/.cache/caffeine-active; swayidle -w timeout 300 '$HOME/.config/sway/scripts/lock.sh' timeout 600 'swaymsg \"output * dpms off\"' resume 'swaymsg \"output * dpms on\"' before-sleep '$HOME/.config/sway/scripts/lock.sh' &"]
+        caffeineProc.startDetached()
+    }
+
     function setNightLightIntensity(v): void {
         root.nightLightIntensity = v
-        nightLightDebounce.restart()
-    }
-
-    Timer {
-        id: nightLightDebounce
-        interval: 60
-        onTriggered: {
-            var mode = root.isNightLightEnabled ? "on" : "off"
-            nightLightProc.command = [swayScriptsDir + "/nightlight-apply", mode, root.nightLightIntensity + ""]
-            nightLightProc.startDetached()
+        // auto-enable night light when intensity > 0
+        if (v > 0 && !root.nightLight) {
+            root.nightLight = true
+        } else if (v === 0 && root.nightLight) {
+            root.nightLight = false
         }
+        nightLightApplyProc.command = ["bash", swayScriptsDir + "/nightlight-apply",
+            root.nightLight ? "on" : "off", v + ""]
+        nightLightApplyProc.running = true
     }
 
     function setNoiseLevel(level) {
         root.noiseLevel = level
-        root.saveRiceSettings()
+        noiseApplyProc.command = ["bash", swayScriptsDir + "/noise-apply", level + ""]
+        noiseApplyProc.startDetached()
     }
 
     function pollVolume() {
@@ -467,9 +420,6 @@ ShellRoot {
         mediaProc.exec([swayScriptsDir + "/now-playing"])
     }
 
-    // Flip the icon optimistically for instant feedback, then resync with the
-    // real player state. Polling right after the toggle returns stale data, so
-    // skip the immediate poll and let the short re-poll timers do the work.
     function toggleMediaPlay() {
         root.mediaStatus = root.mediaStatus === "Playing" ? "Paused" : "Playing"
         mediaToggleProc.command = [swayScriptsDir + "/media-control", "PlayPause"]
@@ -490,10 +440,7 @@ ShellRoot {
         windowTitleProc.exec([swayScriptsDir + "/window-title"])
     }
 
-    // Read sway's real gaps (outer + inner) so the OSD/notification panels keep
-    // aligning to a tiled window's edge if the gaps change. sway's GET_CONFIG
-    // IPC returns the config as text; grep the `gaps inner` / `gaps outer`
-    // directives and sum them (defaults to 5/30 if absent).
+    // read sway gaps for OSD alignment
     function pollGaps() {
         gapsProc.exec(["bash", "-c",
             "swaymsg -t get_config -r 2>/dev/null | python3 -c 'import json,sys,re;c=json.load(sys.stdin)[\"config\"];i=re.search(r\"gaps inner\\s+(\\d+)\",c);o=re.search(r\"gaps outer\\s+(\\d+)\",c);print((int(i.group(1)) if i else 5)+(int(o.group(1)) if o else 30))'"])
@@ -505,8 +452,7 @@ ShellRoot {
         root.brightnessLevel = val
     }
 
-    // wpctl set-volume does not unmute a muted sink, so unmute first —
-    // otherwise raising the level stays silent.
+    // unmute before setting volume
     function setVolume(val) {
         volumeStepProc.command = ["sh", "-c",
             "wpctl set-mute @DEFAULT_AUDIO_SINK@ 0; wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ " + (val / 100)]
@@ -552,10 +498,6 @@ ShellRoot {
         onTriggered: root.pollMedia()
     }
 
-    // Re-poll shortly after a media action so the icon reflects the real state
-    // quickly instead of waiting for the next periodic tick. The player (e.g.
-    // Firefox) usually updates its MPRIS PlaybackStatus a few hundred ms after
-    // a PlayPause method call returns, so a second slower poll is a safety net.
     Timer {
         id: mediaVerify
         interval: 200
@@ -568,7 +510,7 @@ ShellRoot {
         onTriggered: root.pollMedia()
     }
 
-    // Re-poll shortly after a wifi toggle to reflect the new radio state.
+    // re-poll after wifi toggle
     Timer {
         id: wifiVerify
         interval: 800
@@ -581,14 +523,14 @@ ShellRoot {
         onTriggered: root.pollWifi()
     }
 
-    // Safety net: stop showing "Connecting…" if NM never manages to reconnect.
+    // timeout if wifi never reconnects
     Timer {
         id: wifiConnectTimeout
         interval: 10000
         onTriggered: root.isWifiConnecting = false
     }
 
-    // Re-poll shortly after a bluetooth toggle to reflect the new state.
+    // re-poll after bluetooth toggle
     Timer {
         id: bluetoothVerify
         interval: 1500
@@ -601,7 +543,7 @@ ShellRoot {
         onTriggered: root.pollBluetooth()
     }
 
-    // Safety net: stop showing "Connecting…" if bluez never reconnects.
+    // timeout if bluetooth never reconnects
     Timer {
         id: bluetoothConnectTimeout
         interval: 12000
@@ -621,8 +563,7 @@ ShellRoot {
         onTriggered: root.pollBrightness()
     }
 
-    // Gaps rarely change, so poll lazily (startup + every 10s) to keep the
-    // OSD/notification alignment correct without much overhead.
+    // poll gaps every 10s
     Timer {
         interval: 10000
         running: true
@@ -630,7 +571,7 @@ ShellRoot {
         onTriggered: root.pollGaps()
     }
 
-    // Coalesce wheel bursts into a single volume step.
+    // coalesce wheel bursts into single volume step
     Timer {
         id: volumeCommitTimer
         interval: 40
@@ -670,6 +611,16 @@ ShellRoot {
 
     Process {
         id: powerMenuProc
+        onExited: (code, status) => {
+            if (code !== 0) console.warn("[bar] power-menu action failed:", code)
+        }
+    }
+
+    Process {
+        id: caffeineProc
+        onExited: (code, status) => {
+            if (code !== 0) console.warn("[bar] caffeine toggle failed:", code)
+        }
     }
 
     Process {
@@ -685,6 +636,7 @@ ShellRoot {
         stdout: StdioCollector { id: wifiNameOutput; waitForEnd: true }
         onExited: (code, status) => {
             root.wifiName = wifiNameOutput.text.trim()
+            root.wifiEnabled = root.wifiName !== ""
             if (root.wifiName !== "") {
                 root.isWifiConnecting = false
                 wifiConnectTimeout.stop()
@@ -694,6 +646,9 @@ ShellRoot {
 
     Process {
         id: wifiToggleProc
+        onExited: (code, status) => {
+            if (code !== 0) console.warn("[bar] wifi-toggle failed:", code)
+        }
     }
 
     Process {
@@ -713,10 +668,9 @@ ShellRoot {
 
     Process {
         id: bluetoothToggleProc
-    }
-
-    Process {
-        id: nightLightProc
+        onExited: (code, status) => {
+            if (code !== 0) console.warn("[bar] bluetooth-toggle failed:", code)
+        }
     }
 
     Process {
@@ -732,6 +686,9 @@ ShellRoot {
 
     Process {
         id: volumeStepProc
+        onExited: (code, status) => {
+            if (code !== 0) console.warn("[bar] volume-step failed:", code)
+        }
     }
 
     Process {
@@ -750,10 +707,16 @@ ShellRoot {
 
     Process {
         id: mediaToggleProc
+        onExited: (code, status) => {
+            if (code !== 0) console.warn("[bar] media-toggle failed:", code)
+        }
     }
 
     Process {
         id: mediaNextProc
+        onExited: (code, status) => {
+            if (code !== 0) root.pollMedia()
+        }
     }
 
     Process {
@@ -767,6 +730,9 @@ ShellRoot {
 
     Process {
         id: brightnessSetProc
+        onExited: (code, status) => {
+            if (code !== 0) console.warn("[bar] brightness-set failed:", code)
+        }
     }
 
     Process {
@@ -780,9 +746,6 @@ ShellRoot {
 
     // ---- Windows --------------------------------------------------------
 
-    // Only one bar is ever shown. A Loader (instead of two PanelWindows whose
-    // `visible` we flip) guarantees a single layer surface exists, so the
-    // hidden bar can never overlap or grab the exclusive zone of the shown one.
     Component { id: foxBarComp; BarWindow {} }
     Component { id: lonelyBarComp; LonelyBar {} }
 
@@ -791,36 +754,13 @@ ShellRoot {
         sourceComponent: root.activeBar === "lonely" ? lonelyBarComp
                       : foxBarComp
         property alias bar: barLoader.item
-        onItemChanged: if (item) root.barItem = item
-    }
-
-    HoverTip {
-        id: wifiTip
-        anchoredRight: true
-        visible: root.isWifiHovered && root.wifiName !== ""
-        horizontalMargin: root.barSideMargin + root.wifiIconCenterFromBarRight - wifiTip.implicitWidth / 2
-
-        Text {
-            text: root.wifiName
-            font.family: root.fontFamily
-            font.pixelSize: 12 * root.uiScale
-            color: root.getColor("fg", "#f0dfd8")
-        }
-    }
-
-    HoverTip {
-        id: volumeTip
-        anchoredRight: true
-        visible: root.isVolumeHovered
-        horizontalMargin: root.barSideMargin + root.volumeIconCenterFromBarRight - volumeTip.implicitWidth / 2
-
-        Text {
-            text: root.isVolumeMuted ? "muted" : (root.volume < 0 ? "--" : root.volume + "%")
-            font.family: root.fontFamily
-            font.pixelSize: 12 * root.uiScale
-            color: root.isVolumeMuted
-                ? root.withAlpha(root.getColor("muted", "#a08d85"), 0.85)
-                : root.getColor("fg", "#f0dfd8")
+        // re-anchor on bar position change
+        Connections {
+            target: root
+            function onBarSideChanged() {
+                barLoader.active = false
+                Qt.callLater(function() { barLoader.active = true })
+            }
         }
     }
 
@@ -852,39 +792,20 @@ ShellRoot {
         }
     }
 
-    HoverTip {
-        id: batteryTip
-        anchoredRight: true
-        visible: root.isBatteryHovered && root.batteryLevel >= 0
-        horizontalMargin: root.barSideMargin + root.batteryIconCenterFromBarRight - batteryTip.implicitWidth / 2
-
-        Row {
-            spacing: 8
-
-            Text {
-                text: root.batteryLevel + "%"
-                font.family: root.fontFamily
-                font.pixelSize: 12 * root.uiScale
-                font.bold: true
-                color: (root.batteryStatus !== "Charging" && root.batteryLevel <= 15)
-                    ? "#ff6b6b"
-                    : root.getColor("fg", "#f0dfd8")
-            }
-
-            Text {
-                visible: root.batteryStatus === "Charging" || root.batteryStatus === "Full"
-                text: root.batteryStatus === "Charging" ? "charging" : "full"
-                font.family: root.fontFamily
-                font.pixelSize: 11 * root.uiScale
-                color: root.batteryStatus === "Charging"
-                    ? root.getColor("accent", "#ffb691")
-                    : root.withAlpha(root.getColor("muted", "#a08d85"), 0.85)
+    Loader {
+        id: quickMenuLoader
+        active: true
+        sourceComponent: Component {
+            QuickMenu {}
+        }
+        // re-anchor on bar position change
+        Connections {
+            target: root
+            function onBarSideChanged() {
+                quickMenuLoader.active = false
+                Qt.callLater(function() { quickMenuLoader.active = true })
             }
         }
-    }
-
-    QuickMenu {
-        id: quickMenu
     }
 
     NotificationPopup { cardWidth: osdWindow.cardWidth }
@@ -893,10 +814,9 @@ ShellRoot {
 
     OsdWindow { id: osdWindow }
 
-    // ---- IPC (external control via `quickshell ipc call ...`) -----------
+    // ---- IPC -----------------------------------------------------------
 
-    // Open the quick menu straight to one page (e.g. Super+M -> power).
-    // Toggling the same page again closes the menu.
+    // open quick menu to a specific page
     function openQuickMenuPage(pageName): void {
         var alreadyOpen = root["is" + pageName + "PageOpen"]
         root.closeAllPages()
@@ -908,12 +828,12 @@ ShellRoot {
         root.isQuickMenuOpen = true
     }
 
-    // Toggle the bar's visibility from a sway keybind (Super+B). Closes the
-    // quick menu too so it can't float orphaned above a hidden bar.
+    // toggle bar visibility (Super+B)
     IpcHandler {
         target: "bar"
         function toggleBar(): void {
             var b = barLoader.item
+            if (!b) return
             if (b.visible) {
                 root.isQuickMenuOpen = false
             }
@@ -923,30 +843,15 @@ ShellRoot {
         function openPowerMenu(): void { root.openQuickMenuPage("Power") }
         function openNotifications(): void { root.openQuickMenuPage("Notification") }
         function openClipboard(): void { root.openQuickMenuPage("Clipboard") }
-        function openSettings(): void { root.openQuickMenuPage("Settings") }
 
-        function setBar(mode): void {
-            if (["fox", "lonely"].indexOf(mode) === -1) return
-            root.activeBar = mode
-            root.saveRiceSettings()
-        }
-
-        // Hot-reload the palette from colors.js (called by theme-switch after
-        // it regenerates the file) — updates the bar's colors in place instead
-        // of restarting the whole quickshell process.
+        // reload palette from colors.js
         function applyColors(): void {
             root.applyColors()
-        }
-
-        // Re-read settings.js from disk (called by rice-settings-apply after it
-        // rewrites the file) so the bar + quick menu reflect a setting change
-        // immediately instead of waiting for the next poll tick.
-        function reloadSettings(): void {
-            root.pollRiceSettings()
         }
     }
 
     Component.onCompleted: {
+        root.parseRiceSettings()
         root.pollWifi()
         root.pollVolume()
         root.pollBattery()
@@ -957,8 +862,8 @@ ShellRoot {
         root.pollMedia()
         root.pollBluetooth()
         if (root.isNightLightEnabled) {
-            nightLightProc.command = [swayScriptsDir + "/nightlight-toggle", "on", root.nightLightIntensity + ""]
-            nightLightProc.startDetached()
+            nightLightStartupProc.command = [swayScriptsDir + "/nightlight-toggle", "on", root.nightLightIntensity + ""]
+            nightLightStartupProc.startDetached()
         }
     }
 }

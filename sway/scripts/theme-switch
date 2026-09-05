@@ -83,9 +83,15 @@ fi
 update_wall_link "$WALL"
 
 # ---- 1) decide light/dark from wallpaper brightness ----
+# Reuse the wall-pick thumbnail (480x270) if available, so matugen + brightness
+# run on a small image instead of a 10+ MB original. Falls back to the
+# full-res file if the picker hasn't been opened yet.
+THUMB="$HOME/.cache/wall-pick-thumbs/$(basename "$WALL")"
+[[ -f "$THUMB" ]] || THUMB="$WALL"
+
 mean="$(
-    if [[ -n "$MAGICK_BIN" ]]; then "$MAGICK_BIN" "$WALL" -format '%[fx:mean]' info: 2>/dev/null
-    else nix run nixpkgs#imagemagick -- "$WALL" -format '%[fx:mean]' info: 2>/dev/null
+    if [[ -n "$MAGICK_BIN" ]]; then "$MAGICK_BIN" "$THUMB" -format '%[fx:mean]' info: 2>/dev/null
+    else nix run nixpkgs#imagemagick -- "$THUMB" -format '%[fx:mean]' info: 2>/dev/null
     fi || true
 )"
 [[ -z "$mean" ]] && mean=0.5
@@ -99,7 +105,7 @@ else
     MATUGEN=( nix run nixpkgs#matugen -- )
 fi
 
-if ! "${MATUGEN[@]}" image "$WALL" -m "$mode" --prefer "$prefer" --json hex > "$CACHE/matugen.json" 2>/dev/null; then
+if ! "${MATUGEN[@]}" image "$THUMB" -m "$mode" --prefer "$prefer" --json hex > "$CACHE/matugen.json" 2>/dev/null; then
     echo "theme-switch: matugen failed to extract colors" >&2
     exit 1
 fi

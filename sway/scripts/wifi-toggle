@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Toggle the wifi radio off/on. Turning it on auto-connects to the best known network.
+export PATH="/run/current-system/sw/bin:/etc/profiles/per-user/oryza/bin:$PATH"
 set -uo pipefail
 
 if [ "$(nmcli -g WIFI radio)" = "enabled" ]; then

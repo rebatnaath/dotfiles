@@ -70,6 +70,8 @@ async def bar_call_close(bus, bar_id):
 
 
 class NotificationBackend(ServiceInterface):
+    _MAX_MAP_SIZE = 500
+
     def __init__(self, bus: MessageBus):
         super().__init__(PORTAL_IFACE)
         self.bus = bus
@@ -87,6 +89,14 @@ class NotificationBackend(ServiceInterface):
                 return
             bar_id = reply.body[0]
             self._map[(app_id, nid)] = bar_id
+            # Evict oldest entries if the map grows too large. Uses simple FIFO
+            # eviction (not LRU) which is acceptable for transient notifications.
+            # Frequently-used notifications (e.g. ongoing media) are unlikely to
+            # be in the oldest 25% since they're typically re-added periodically.
+            if len(self._map) > self._MAX_MAP_SIZE:
+                oldest = list(self._map.keys())[:len(self._map) // 4]
+                for k in oldest:
+                    self._map.pop(k, None)
             print(f"[portal-backend] forwarded -> bar id {bar_id}", file=sys.stderr)
         except Exception as exc:
             print(f"[portal-backend] AddNotification forward failed: {exc}",
@@ -106,7 +116,12 @@ class NotificationBackend(ServiceInterface):
 
 
 async def amain():
-    bus = await MessageBus().connect()
+    try:
+        bus = await MessageBus().connect()
+    except Exception as e:
+        print(f"[portal-backend] cannot connect to session bus: {e}",
+              file=sys.stderr)
+        sys.exit(1)
     backend = NotificationBackend(bus)
     bus.export(PATH, backend)
     owner = "org.freedesktop.impl.portal.desktop.quickshell"

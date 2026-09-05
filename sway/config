@@ -43,7 +43,6 @@ bindsym $mod+Q kill
 bindsym $mod+V floating toggle
 
 # wallpaper / theme
-bindsym $mod+W exec $HOME/.config/sway/scripts/wall-pick
 bindsym $mod+Shift+W exec $HOME/.config/sway/scripts/theme-switch
 
 # region screenshot -> file + clipboard
@@ -53,7 +52,6 @@ bindsym $mod+Shift+S exec bash -c 'mkdir -p "$HOME/Pictures/Screenshots/sway" &&
 bindsym $mod+M exec quickshell ipc -p $HOME/.config/quickshell/bar call bar openPowerMenu
 bindsym $mod+n exec quickshell ipc -p $HOME/.config/quickshell/bar call bar openNotifications
 bindsym $mod+Shift+v exec quickshell ipc -p $HOME/.config/quickshell/bar call bar openClipboard
-bindsym $mod+Shift+i exec quickshell ipc -p $HOME/.config/quickshell/bar call bar openSettings
 
 bindsym $mod+J layout toggle split
 
@@ -159,10 +157,8 @@ include ~/.config/sway/theme-colors
 include ~/.config/sway/settings.conf
 
 ### Window rules
-for_window [title="^wallpaper-picker$"] floating enable, move position center
 for_window [title="^power-menu$"] floating enable, move position center
 for_window [title="^rofi$"] floating enable, move position center
-for_window [app_id="^wallpaper-picker$"] border none
 for_window [app_id="^power-menu$"] border none
 for_window [app_id="^rofi$"] border none
 

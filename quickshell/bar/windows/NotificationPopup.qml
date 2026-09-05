@@ -3,19 +3,15 @@ import QtQuick
 import QtQuick.Effects
 import "../components"
 
-// Transient notification popups bottom-left, fed by the shared
-// notificationPopupModel (owned by shell.qml). Cards stack upward with a 5px
-// gap, styled like the bar/OSD faces, each auto-dismissing.
+// notification popups, auto-dismissing, stacked upward
 PanelWindow {
     id: notificationPopup
-    // Mirrors the OSD card width (set via shell.qml) so both popups match.
+    // mirror OSD card width
     property real cardWidth: 311
     color: "transparent"
     aboveWindows: true
     exclusionMode: ExclusionMode.Ignore
-    // Vertically at the top when the bar is on top or is full-width; horizontally
-    // on the right when full-width. Non-full-width top bar keeps notifications
-    // top-left beside the bar.
+    // top-right when bar is on top/full-width, top-left otherwise
     readonly property bool atTop: (root.barSide === "top" || root.barFullWidth)
     readonly property bool atRight: root.barFullWidth
     anchors {
@@ -27,10 +23,10 @@ PanelWindow {
     margins {
         top: atTop ? (root.barFullWidth ? 62 * root.uiScale : 9 * root.uiScale) : 0
         bottom: atTop ? 0 : 9 * root.uiScale
-        left: atRight ? 0 : root.windowGap
-        right: atRight ? root.windowGap : 0
+        left: atRight ? 0 : root.windowGap * root.uiScale
+        right: atRight ? root.windowGap * root.uiScale : 0
     }
-    // Width matches the OSD — mirroring the OSD keeps both panes pixel-aligned.
+    // match OSD width
     implicitWidth: notificationPopup.cardWidth
     implicitHeight: popupList.contentHeight
     visible: notificationPopupModel.count > 0
@@ -39,7 +35,7 @@ PanelWindow {
         id: popupList
         width: notificationPopup.cardWidth
         height: popupList.contentHeight
-        // Let each card's shadow paint into the window's 8px right/bottom room.
+        // clip off for shadow room
         clip: false
         anchors { top: parent.top; left: parent.left }
         spacing: 5
@@ -51,15 +47,14 @@ PanelWindow {
             width: popupList.width
             height: 54 * root.uiScale
 
-            // Same hard offset shadow as the bar/OSD; placed first to render
-            // behind the card.
+            // hard offset shadow
             RectangularShadow {
                 anchors.fill: card
                 radius: 0
                 color: "#000000"
                 blur: 0
                 spread: 0
-                offset: Qt.vector2d(8, 8)
+                offset: Qt.vector2d(8 * root.uiScale, 8 * root.uiScale)
                 visible: root.osdShadow
             }
 
@@ -99,12 +94,11 @@ PanelWindow {
                         border.color: root.withAlpha(root.getColor("accent", "#ffb691"), 0.4)
                         clip: true
 
-                        // Show the notification image when provided, otherwise
-                        // fall back to the app initial.
+                        // notification image or app initial
                         Image {
                             anchors.fill: parent
                             anchors.margins: 3 * root.uiScale
-                            source: modelData.image !== "" ? modelData.image : ""
+                            source: modelData.image
                             fillMode: Image.PreserveAspectCrop
                             visible: modelData.image !== ""
                             asynchronous: true
@@ -137,8 +131,7 @@ PanelWindow {
                         }
 
                         Text {
-                            // summary + body combined on one elided line so the
-                            // compact 46px card keeps the message without wrapping.
+                            // summary + body on one elided line
                             text: modelData.body !== "" ? modelData.summary + " — " + modelData.body : modelData.summary
                             font.family: root.fontFamily
                             font.pixelSize: 10 * root.uiScale
@@ -159,11 +152,12 @@ PanelWindow {
                     onExited: parent.color = root.getColor("bg", "#1a120e")
                 }
 
+                // Auto-dismiss after 5 seconds. Timer is per-delegate so each
+                // notification has its own lifetime. The guard on modelData
+                // prevents dismissing after the entry is removed from the model.
                 Timer {
                     interval: 5000
                     running: true
-                    // Guarded: the entry may already have been removed (user
-                    // click / clear) while this timer was pending.
                     onTriggered: {
                         if (modelData && modelData.notification) modelData.notification.dismiss()
                     }

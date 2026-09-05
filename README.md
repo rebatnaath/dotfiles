@@ -5,7 +5,7 @@ dotfiles, I'm posting them here. I'd like to be helpful, and some of you might
 be new to this kind of thing (or not), so that's why the README is a bit
 detailed. Don't cringe on me, please.
 
-> **⚠️ STOP — read this first:** if you're new and don't know what you're
+> **STOP — read this first:** if you're new and don't know what you're
 > doing, turn back now. This setup **has bugs** (see the note below) and is
 > actively being worked on. Please only proceed if you know what you're doing,
 > until I fix things myself.
@@ -31,15 +31,15 @@ kitty, rofi, nvim and fastfetch configs.
 Two bar variants, switched with `activeBar` in `quickshell/bar/settings.js`:
 
 - **Fox**: a foxes themed bottom bar.
-- **Lonely**: a single-colour accent bar (focused workspace + window title
-  share the lightest matugen tone, inactive workspaces get darkened chips).
+- **Cat**: a single-colour accent bar (focused workspace + window title
+  share the lightest matugen tone, inactive workspaces get darkised chips).
 
-`fox` and `lonely` are just the names I gave them, no particular reason.
+`fox` and `cat` are just the names I gave them, no particular reason.
 
 <table>
   <tr>
     <td align="center"><b>Fox</b><br><img src="assets/fox-1.png" width="320"><br><img src="assets/fox-2.png" width="320"></td>
-    <td align="center"><b>Lonely</b><br><img src="assets/lonely-1.png" width="320"><br><img src="assets/lonely-2.png" width="320"></td>
+    <td align="center"><b>Cat</b><br><img src="assets/lonely-1.png" width="320"><br><img src="assets/lonely-2.png" width="320"></td>
   </tr>
 </table>
 
@@ -48,8 +48,9 @@ Two bar variants, switched with `activeBar` in `quickshell/bar/settings.js`:
 There is one shared control menu (the Quickshell quick menu) used by every bar.
 All bars open it by clicking a spot in their own layout:
 
-- **Fox**: click the `ctrls` button on the right.
-- **Lonely**: click any of the right info blocks (`[bat]`, `[vol]`, `[time]`).
+- **Fox**: click the `ctrls` button on the right (or toggle the status bar
+  mode in settings to show wifi/volume/battery instead).
+- **Cat**: click any of the right info blocks (`[bat]`, `[vol]`, `[time]`).
 
 The menu's colours follow the bar's wallpaper-derived matugen palette, so it
 follows whatever wallpaper you apply.
@@ -139,6 +140,10 @@ and how things behave; the pages and hotkeys live in
 
 ## Install
 
+> **Warning:** The install script **overwrites** your existing configs for
+> sway, quickshell, kitty, rofi, nvim, and fastfetch. A backup of your old
+> configs is saved to `~/.config-backup/<timestamp>/` before overwriting.
+
 Clone and run the install script:
 
 ```sh
@@ -149,18 +154,18 @@ cd ~/dotfiles
 
 The script will:
 - Back up your existing configs to `~/.config-backup/<timestamp>/`
-- Symlink the new configs into `~/.config/`
+- Copy the new configs into `~/.config/` (overwriting the old ones)
 
-Or manually symlink the dirs you want:
+Or manually copy the dirs you want:
 
 ```sh
 git clone https://github.com/rebatnaath/dotfiles ~/dotfiles
-ln -sf ~/dotfiles/sway ~/.config/sway
-ln -sf ~/dotfiles/quickshell ~/.config/quickshell
-ln -sf ~/dotfiles/kitty ~/.config/kitty
-ln -sf ~/dotfiles/rofi ~/.config/rofi
-ln -sf ~/dotfiles/nvim ~/.config/nvim
-ln -sf ~/dotfiles/fastfetch ~/.config/fastfetch
+cp -r ~/dotfiles/sway ~/.config/sway
+cp -r ~/dotfiles/quickshell ~/.config/quickshell
+cp -r ~/dotfiles/kitty ~/.config/kitty
+cp -r ~/dotfiles/rofi ~/.config/rofi
+cp -r ~/dotfiles/nvim ~/.config/nvim
+cp -r ~/dotfiles/fastfetch ~/.config/fastfetch
 ```
 
 ## Wallpapers

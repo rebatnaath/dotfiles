@@ -6,6 +6,11 @@
 # / super+L can lock again cleanly.
 set -euo pipefail
 
+# If caffeine mode is active, skip locking
+if [[ -f "$HOME/.cache/caffeine-active" ]]; then
+    exit 0
+fi
+
 STATE="$HOME/.cache/sway-theme.json"
 LOCK_IMG="$HOME/.cache/lock-blur.png"
 STAMP="$HOME/.cache/lock-blur.stamp"

@@ -3,27 +3,23 @@ import Quickshell.I3
 import QtQuick
 import "../components"
 
-// The "lonely" bar: a single-colour accent bar where the background and the
-// active workspace share one colour (so the active workspace blends invisibly
-// into the bar), while inactive workspaces get a darkened chip. Workspaces
-// (roman numerals) sit left, the focused window title centered, the status
-// group right. The floating/shadow/border chrome comes from the shared BarFace;
-// the border is a solid face-colour ring.
+// lonely bar: accent bar where active workspace blends into bar
 BarFace {
     id: lonelyBar
 
-    // The bar background and its border share one colour (opaque), set to the
-    // same mix(bg, primary, 25%) that sway uses for the active-window border so
-    // the bar matches a focused window (theme-switch writes the same blend).
-    faceColor: root.mixHex(root.getColor("bg", "#18130b"), root.getColor("accent", "#ffb691"), 0.25)
-    borderColor: root.mixHex(root.getColor("bg", "#18130b"), root.getColor("accent", "#ffb691"), 0.25)
+    // bar tint (matches active-window border)
+    readonly property color barTint: root.mixHex(root.getColor("bg", "#18130b"), root.getColor("accent", "#ffb691"), 0.25)
+    faceColor: barTint
+    borderColor: barTint
     readonly property color itemColor: root.getColor("bg", "#18130b")
-    // Focused-workspace + focused-window text share the lightest matugen tone
-    // so they read clearly against the outline-coloured background/border.
+    // focused workspace/window text color
     readonly property color fgText: root.getColor("fg", "#dee4e1")
 
-    // Sway destroys empty workspaces, so list indices map to 1..N roman labels.
+    function toggleQuickMenu() { root.isQuickMenuOpen = !root.isQuickMenuOpen }
+
+    // roman numeral for workspace (max 39)
     function toRoman(n) {
+        if (n > 39) return n.toString()
         var vals = [[10, "x"], [9, "ix"], [5, "v"], [4, "iv"], [1, "i"]]
         var r = ""
         for (var i = 0; i < vals.length; i++) {
@@ -32,8 +28,7 @@ BarFace {
         return r
     }
 
-    // Workspaces (roman numerals) on the left. Their background extends to the
-    // face edges (under the border ring, which is drawn last on top).
+    // workspaces (roman numerals)
     Rectangle {
         anchors.left: parent.left
         anchors.top: parent.top
@@ -62,7 +57,7 @@ BarFace {
                     Text {
                         id: wsLabel
                         anchors.centerIn: parent
-                        // Workspace numbers map to their actual roman numeral.
+                        // roman numeral
                         text: lonelyBar.toRoman(modelData.id)
                         font.family: root.fontFamily
                         font.pixelSize: 11 * root.uiScale
@@ -80,7 +75,7 @@ BarFace {
         }
     }
 
-    // Focused window title, centered.
+    // focused window title
     Text {
         id: titleText
         width: Math.min(implicitWidth, parent.width * 0.4)
@@ -93,9 +88,7 @@ BarFace {
         color: lonelyBar.fgText
     }
 
-    // System + time widgets on the right: full-height blocks flush against the
-    // top/bottom/right borders, no outer margins (CSS .status-list). Each shows
-    // [bat %], [vol %], [HH:MM]; clicking anywhere in the group opens the quick menu.
+    // system + time widgets
     Row {
         id: rightWidgets
         anchors.right: parent.right
@@ -120,7 +113,7 @@ BarFace {
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.isQuickMenuOpen = !root.isQuickMenuOpen
+                onClicked: lonelyBar.toggleQuickMenu()
             }
         }
 
@@ -141,7 +134,7 @@ BarFace {
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.isQuickMenuOpen = !root.isQuickMenuOpen
+                onClicked: lonelyBar.toggleQuickMenu()
             }
         }
 
@@ -159,11 +152,11 @@ BarFace {
                 color: lonelyBar.fgText
             }
 
-            // Whole right status group ([bat][vol][time]) opens the quick menu.
+            // status group opens quick menu
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.isQuickMenuOpen = !root.isQuickMenuOpen
+                onClicked: lonelyBar.toggleQuickMenu()
             }
         }
     }

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Print the active wifi SSID, or nothing if wifi is off / not connected.
+export PATH="/run/current-system/sw/bin:/etc/profiles/per-user/oryza/bin:$PATH"
 set -uo pipefail
 nmcli -t -f IN-USE,SSID device wifi list --rescan no 2>/dev/null | python3 -c '
 import sys

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Print the default audio sink volume as an integer percent (0..100). Prefixed with
 # "M" when muted, e.g. "M60". Prints nothing on error.
+export PATH="/run/current-system/sw/bin:/etc/profiles/per-user/oryza/bin:$PATH"
 set -uo pipefail
 
 out="$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null)" || exit 0

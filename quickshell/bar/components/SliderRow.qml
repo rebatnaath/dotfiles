@@ -85,6 +85,7 @@ Row {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
+            preventStealing: true
 
             function percentageAt(mouseX) {
                 var norm = mouseX / track.width
@@ -98,6 +99,7 @@ Row {
             }
 
             onPressed: (mouse) => {
+                print("[SliderRow] onPressed label=" + sliderRow.labelText)
                 sliderRow.isDragging = true
                 sliderRow.valuePreviewed(percentageAt(mouse.x))
             }
@@ -105,6 +107,7 @@ Row {
                 if (pressed) sliderRow.valuePreviewed(percentageAt(mouse.x))
             }
             onReleased: (mouse) => {
+                print("[SliderRow] onReleased label=" + sliderRow.labelText + " value=" + percentageAt(mouse.x))
                 sliderRow.isDragging = false
                 sliderRow.valueCommitted(percentageAt(mouse.x))
             }

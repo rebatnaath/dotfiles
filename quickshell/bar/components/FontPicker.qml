@@ -1,11 +1,7 @@
 import Quickshell.Io
 import QtQuick
 
-// Searchable font picker: type to filter the installed (fontconfig) fonts; the
-// top matches appear in-flow and are clickable. Choosing applies the font to
-// quickshell + kitty via root (the caller wires chosen() to saveRiceSettings()).
-// Implemented as a Column so the results expand the page instead of overlaying
-// and being clipped by the scroll container.
+// searchable font picker (filters fontconfig fonts)
 Column {
     id: fontPicker
 
@@ -13,6 +9,7 @@ Column {
     property bool popupOpen: false
     property var fonts: []
     property var matching: []
+    property var fontsLower: []
     property int listHighlight: -1
 
     signal chosen(string fontFamily)
@@ -50,12 +47,10 @@ Column {
             font.family: root.fontFamily
             font.pixelSize: 13 * root.uiScale
             selectByMouse: true
+            // init to current font, don't write back on keystroke
             text: root.fontFamily
 
-            onTextChanged: {
-                root.fontFamily = text !== "" ? text : "GeistMono NFM"
-                fontPicker.filterFonts()
-            }
+            onTextChanged: fontPicker.filterFonts()
             onAccepted: {
                 var t = field.text.trim()
                 if (t !== "") fontPicker.applyFont(t)
@@ -64,17 +59,23 @@ Column {
             Keys.onEscapePressed: fontPicker.popupOpen = false
             Keys.onUpPressed: fontPicker.listCursor(-1)
             Keys.onDownPressed: fontPicker.listCursor(1)
-            Keys.onReturnPressed: fontPicker.applyFont(fontPicker.currentHighlight())
+
+            // Sync with external font changes (e.g. settings reload)
+            Connections {
+                target: root
+                function onFontFamilyChanged() {
+                    if (!field.activeFocus) field.text = root.fontFamily
+                }
+            }
         }
 
-        // Re-scan fontconfig (fc-list) so fonts installed since startup show up
-        // without restarting the picker. FontAwesome glyph, clickable.
+        // rescan fontconfig
         Text {
             id: refreshIcon
             anchors.right: caret.left
             anchors.rightMargin: 8
             anchors.verticalCenter: parent.verticalCenter
-            text: "\uF021"
+            text: "\u21BB"
             font.family: root.fontFamily
             font.pixelSize: 12 * root.uiScale
             color: refreshArea.hovered
@@ -163,23 +164,25 @@ Column {
 
     function collectFonts(text) {
         var lines = text.trim().split("\n")
-        var seen = {}, out = []
+        var seen = {}, out = [], lower = []
         for (var i = 0; i < lines.length; i++) {
             var f = lines[i].trim()
-            if (f && !seen[f]) { seen[f] = 1; out.push(f) }
+            if (f && !seen[f]) { seen[f] = 1; out.push(f); lower.push(f.toLowerCase()) }
         }
         fontPicker.fonts = out
+        fontPicker.fontsLower = lower
     }
 
     function filterFonts() {
         var q = field.text.trim().toLowerCase()
         var out = []
-        for (var i = 0; i < fontPicker.fonts.length; i++) {
-            if (fontPicker.fonts[i].toLowerCase().indexOf(q) >= 0) out.push(fontPicker.fonts[i])
+        for (var i = 0; i < fontPicker.fontsLower.length; i++) {
+            if (fontPicker.fontsLower[i].indexOf(q) >= 0) out.push(fontPicker.fonts[i])
         }
         fontPicker.matching = out.slice(0, 8)
         fontPicker.listHighlight = -1
-        fontPicker.popupOpen = out.length > 0
+        // auto-close if no matches
+        if (fontPicker.popupOpen && out.length === 0) fontPicker.popupOpen = false
     }
 
     function applyFont(name) {

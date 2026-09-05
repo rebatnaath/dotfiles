@@ -34,7 +34,6 @@ ShellRoot {
     }
 
     function applyFont(): void {
-        settingsFile.reload()
         var m = /fontFamily:[ \t]*"([^"]*)"/.exec(settingsFile.text())
         if (m) root.fontFamily = m[1]
     }
@@ -50,17 +49,18 @@ ShellRoot {
     property string timeText: ""
     property string dateText: ""
 
+    readonly property var dayNames: ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
+    readonly property var monthNames: ["January","February","March","April","May","June","July","August","September","October","November","December"]
+
     function updateClock() {
         var d = new Date()
-        var days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
-        var months = ["January","February","March","April","May","June","July","August","September","October","November","December"]
         var h = d.getHours(), m = d.getMinutes()
         root.timeText = h + ":" + (m < 10 ? "0" : "") + m
-        root.dateText = days[d.getDay()].toLowerCase() + ", " + months[d.getMonth()].toLowerCase() + " " + d.getDate()
+        root.dateText = root.dayNames[d.getDay()].toLowerCase() + ", " + root.monthNames[d.getMonth()].toLowerCase() + " " + d.getDate()
     }
 
     Timer {
-        interval: 1000
+        interval: 60000
         running: true
         repeat: true
         onTriggered: root.updateClock()
@@ -91,6 +91,7 @@ ShellRoot {
     Process { id: mediaNextProc }
 
     function pollMedia() {
+        if (mediaProc.running) return
         mediaProc.exec([root.homeDir + "/.config/sway/scripts/now-playing"])
     }
 
@@ -102,8 +103,13 @@ ShellRoot {
     }
 
     function getColor(key, fallback) {
-        var p = "color" + key.charAt(0).toUpperCase() + key.slice(1)
-        return root[p] || fallback
+        switch (key) {
+            case "bg": return root.colorBg ?? fallback
+            case "fg": return root.colorFg ?? fallback
+            case "accent": return root.colorAccent ?? fallback
+            case "muted": return root.colorMuted ?? fallback
+            default: return fallback
+        }
     }
 
     function withAlpha(colorHex, alpha) {
@@ -138,6 +144,7 @@ ShellRoot {
             root.authPending = false
             var ok = result === PamResult.Success
             root.failedText = ok ? "" : "Incorrect password — try again"
+            root.pamPassword = ""
             if (ok) root.finishUnlock()
             else root.authSig()
         }
@@ -175,6 +182,7 @@ ShellRoot {
         surface: lockSurfaceTemplate
         Component.onCompleted: {
             lock.locked = (Quickshell.env("QS_LOCK") === "1")
+            root.updateClock()
             root.pollMedia()
         }
     }
@@ -183,32 +191,6 @@ ShellRoot {
         id: lockSurfaceTemplate
         WlSessionLockSurface {
             id: surface
-
-            // ---- Screenshot keybinds -----------------------------------------
-            // When ext-session-lock is active the surface owns the keyboard, so
-            // sway's bindsym never fires (Super+Shift+S used to type "s" into the
-            // password field). Re-bind those combos here and run the same grim
-            // commands directly. Shortcut is focus-independent, so it fires even
-            // while the password TextField has focus.
-            Process { id: scratchRegionshot } // unbounded reuse; fired detached
-            Process { id: scratchFullshot }
-
-            Shortcut {
-                sequence: "Meta+Shift+S"
-                onActivated: {
-                    scratchRegionshot.command = ["bash", "-c",
-                        'mkdir -p "$HOME/Pictures/Screenshots/sway" && grim -g "$(slurp)" - | tee "$HOME/Pictures/Screenshots/sway/screenshot-$(date +%Y-%m-%d_%H%M%S).png" | wl-copy']
-                    scratchRegionshot.startDetached()
-                }
-            }
-            Shortcut {
-                sequence: "Meta+Shift+F10"
-                onActivated: {
-                    scratchFullshot.command = ["bash", "-c",
-                        'mkdir -p "$HOME/Pictures/Screenshots/sway" && grim - | tee "$HOME/Pictures/Screenshots/sway/screenshot-$(date +%Y-%m-%d_%H%M%S).png" | wl-copy']
-                    scratchFullshot.startDetached()
-                }
-            }
 
             // ---- Backdrop: current wallpaper, pre-blurred ------------------
             // lock.sh writes a blurred, screen-sized copy of the wallpaper to
@@ -221,7 +203,7 @@ ShellRoot {
                 source: "file://" + root.homeDir + "/.cache/lock-blur.png"
                 fillMode: Image.PreserveAspectCrop
                 smooth: true
-                cache: false
+                cache: true
                 onStatusChanged: if (status === Image.Error) {
                     source = "file://" + root.wallpaperPath
                 }
@@ -284,7 +266,7 @@ ShellRoot {
                 height: loginCardContent.implicitHeight + 40
                 color: root.getColor("bg", "#15130b")
                 border.width: 1
-                border.color: root.withAlpha(root.getColor("accent", "#dac76f"), 0.4)
+                border.color: root.withAlpha(root.getColor("accent", "#ffb691"), 0.4)
 
                 Column {
                     id: loginCardContent
@@ -303,7 +285,7 @@ ShellRoot {
                         radius: width / 2
                         color: "transparent"
                         border.width: 2
-                        border.color: root.withAlpha(root.getColor("accent", "#dac76f"), 0.5)
+                        border.color: root.withAlpha(root.getColor("accent", "#ffb691"), 0.5)
 
                         ClippingRectangle {
                             anchors.fill: parent
@@ -343,7 +325,7 @@ ShellRoot {
                         radius: 0
                         color: root.withAlpha(root.getColor("bg", "#15130b"), 0.7)
                         border.width: 1
-                        border.color: root.withAlpha(root.getColor("accent", "#dac76f"), 0.5)
+                        border.color: root.withAlpha(root.getColor("accent", "#ffb691"), 0.5)
 
                         TextField {
                             id: passwordInput
@@ -357,7 +339,7 @@ ShellRoot {
                             font.pixelSize: 13
                             font.letterSpacing: text === "" ? 0 : 4
                             color: root.getColor("fg", "#e8e2d4")
-                            selectionColor: root.withAlpha(root.getColor("accent", "#dac76f"), 0.3)
+                            selectionColor: root.withAlpha(root.getColor("accent", "#ffb691"), 0.3)
                             placeholderText: "Enter password to unlock"
                             placeholderTextColor: root.withAlpha(root.getColor("muted", "#969080"), 0.9)
                             background: Item {}
@@ -375,10 +357,6 @@ ShellRoot {
                             }
                         }
 
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: passwordInput.forceActiveFocus()
-                        }
                     }
 
                     // Status line: wrong-password error, shown fast below the field.
@@ -388,12 +366,12 @@ ShellRoot {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: root.failedText
+                        visible: root.failedText !== ""
                         horizontalAlignment: Text.AlignHCenter
                         font.family: root.fontFamily
                         font.pixelSize: 12
                         font.bold: true
                         color: "#ff6b6b"
-                        opacity: 1
                     }
                 }
             }
@@ -422,7 +400,7 @@ ShellRoot {
                 radius: 0
                 color: root.getColor("bg", "#15130b")
                 border.width: 1
-                border.color: root.withAlpha(root.getColor("accent", "#dac76f"), 0.3)
+                border.color: root.withAlpha(root.getColor("accent", "#ffb691"), 0.3)
                 visible: root.mediaStatus !== "None"
 
                 Row {
@@ -437,33 +415,26 @@ ShellRoot {
                         radius: 0
                         color: "transparent"
                         border.width: 1
-                        border.color: root.withAlpha(root.getColor("accent", "#dac76f"), 0.3)
+                        border.color: root.withAlpha(root.getColor("accent", "#ffb691"), 0.3)
+                        clip: true
 
-                        ClippingRectangle {
+                        Image {
                             anchors.fill: parent
-                            anchors.margins: 1
-                            radius: 0
-                            color: "transparent"
+                            anchors.margins: 2
+                            source: root.mediaArtUrl
+                            fillMode: Image.PreserveAspectCrop
+                            smooth: true
+                            asynchronous: true
+                            visible: status === Image.Ready && root.mediaArtUrl !== ""
+                        }
 
-                            Image {
-                                anchors.fill: parent
-                                anchors.margins: 2
-                                source: root.mediaArtUrl
-                                fillMode: Image.PreserveAspectCrop
-                                smooth: true
-                                asynchronous: true
-                                cache: false
-                                visible: status === Image.Ready && root.mediaArtUrl !== ""
-                            }
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: "󰎇"
-                                font.family: root.fontFamily
-                                font.pixelSize: 18
-                                color: root.withAlpha(root.getColor("muted", "#969080"), 0.5)
-                                visible: root.mediaArtUrl === ""
-                            }
+                        Text {
+                            anchors.centerIn: parent
+                            text: "󰎇"
+                            font.family: root.fontFamily
+                            font.pixelSize: 18
+                            color: root.withAlpha(root.getColor("muted", "#969080"), 0.5)
+                            visible: root.mediaArtUrl === ""
                         }
                     }
 
@@ -498,11 +469,11 @@ ShellRoot {
                         width: 30
                         height: 30
                         radius: 15
-                        color: playMouse.hovered
-                            ? root.withAlpha(root.getColor("accent", "#dac76f"), 0.14)
+                        color: playMouseArea.hovered
+                            ? root.withAlpha(root.getColor("accent", "#ffb691"), 0.14)
                             : "transparent"
-                        border.width: playMouse.hovered ? 1 : 0
-                        border.color: root.withAlpha(root.getColor("accent", "#dac76f"), 0.4)
+                        border.width: playMouseArea.hovered ? 1 : 0
+                        border.color: root.withAlpha(root.getColor("accent", "#ffb691"), 0.4)
                         anchors.verticalCenter: parent.verticalCenter
 
                         Text {
@@ -510,11 +481,11 @@ ShellRoot {
                             text: root.mediaStatus === "Playing" ? "󰏤" : "󰐊"
                             font.family: root.fontFamily
                             font.pixelSize: 13
-                            color: root.getColor("accent", "#dac76f")
+                            color: root.getColor("accent", "#ffb691")
                         }
 
                         MouseArea {
-                            id: playMouse
+                            id: playMouseArea
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
@@ -530,11 +501,11 @@ ShellRoot {
                         width: 30
                         height: 30
                         radius: 15
-                        color: nextMouse.hovered
-                            ? root.withAlpha(root.getColor("accent", "#dac76f"), 0.14)
+                        color: nextMouseArea.hovered
+                            ? root.withAlpha(root.getColor("accent", "#ffb691"), 0.14)
                             : "transparent"
-                        border.width: nextMouse.hovered ? 1 : 0
-                        border.color: root.withAlpha(root.getColor("accent", "#dac76f"), 0.4)
+                        border.width: nextMouseArea.hovered ? 1 : 0
+                        border.color: root.withAlpha(root.getColor("accent", "#ffb691"), 0.4)
                         anchors.verticalCenter: parent.verticalCenter
 
                         Text {
@@ -542,11 +513,11 @@ ShellRoot {
                             text: "󰒭"
                             font.family: root.fontFamily
                             font.pixelSize: 13
-                            color: root.getColor("accent", "#dac76f")
+                            color: root.getColor("accent", "#ffb691")
                         }
 
                         MouseArea {
-                            id: nextMouse
+                            id: nextMouseArea
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor

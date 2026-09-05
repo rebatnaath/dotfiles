@@ -8,10 +8,12 @@ Item {
     property string label: ""
     property string sublabel: ""
     property bool checked: false
+    property bool disabled: false
     signal toggled(bool checked)
 
     height: 26 * root.uiScale
     width: parent.width
+    opacity: disabled ? 0.4 : 1
 
     Column {
         anchors.left: parent.left
@@ -37,6 +39,7 @@ Item {
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         checked: toggleRow.checked
+        enabled: !toggleRow.disabled
         onToggled: (c) => toggleRow.toggled(c)
     }
 }

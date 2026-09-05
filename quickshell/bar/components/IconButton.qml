@@ -1,12 +1,11 @@
 import QtQuick
 
-// Square icon button used in the QuickMenu profile header. Shows a subtle
-// accent tint normally, a stronger one while hovered or active.
+// square icon button with accent tint
 Rectangle {
     id: iconButton
 
     property string iconText: ""
-    property string iconFontFamily: "GeistMono NFM"
+    property string iconFontFamily: root.fontFamily
     property int iconPixelSize: 18
     property bool isActive: false
     signal clicked()

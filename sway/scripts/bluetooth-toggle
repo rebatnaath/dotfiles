@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Toggle bluetooth power. Turning it on reconnects to the last paired device.
+export PATH="/run/current-system/sw/bin:/etc/profiles/per-user/oryza/bin:$PATH"
 set -uo pipefail
 
 if timeout 3 bluetoothctl show 2>/dev/null | grep -q 'Powered: yes'; then

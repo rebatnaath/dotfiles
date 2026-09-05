@@ -1,8 +1,6 @@
 import QtQuick
 
-// Reusable pill used for the QuickMenu toggles and actions (wifi, bluetooth,
-// dnd, night light, screenshot, battery). isChecked drives the stronger
-// "lit up" background; isActive forces foreground text for display-only pills.
+// pill button (toggles + actions)
 Rectangle {
     id: pillButton
 
@@ -16,13 +14,16 @@ Rectangle {
     property int labelPixelSize: 12
     signal clicked()
 
+    readonly property int columnsPerRow: 3
+    readonly property real columnGap: 10
+
     readonly property color activeForeground: isDanger ? "#ff6b6b" : root.getColor("fg", "#f0dfd8")
     readonly property color activeIconColor: isDanger
         ? "#ff6b6b"
         : (iconUsesAccent ? root.getColor("accent", "#ffb691") : root.getColor("fg", "#f0dfd8"))
     readonly property color inactiveColor: root.withAlpha(root.getColor("muted", "#a08d85"), 0.85)
 
-    width: (parent.width - 20) / 3
+    width: (parent.width - columnGap * (columnsPerRow - 1)) / columnsPerRow
     height: 42 * root.uiScale
     radius: 0
     color: isChecked
@@ -54,7 +55,7 @@ Rectangle {
             text: pillButton.labelText
             font.family: root.fontFamily
             font.pixelSize: pillButton.labelPixelSize
-            width: Math.max(0, pillButton.width - 34)
+            width: Math.max(0, pillButton.width - pillButton.iconPixelSize - 8 * root.uiScale - 10)
             elide: Text.ElideRight
             color: (pillButton.isChecked || pillButton.isActive)
                 ? pillButton.activeForeground

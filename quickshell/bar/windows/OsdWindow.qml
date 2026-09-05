@@ -4,17 +4,13 @@ import QtQuick
 import QtQuick.Effects
 import "../components"
 
-// On-screen display: flashes the volume/brightness level bottom-right, right
-// edge aligned with a tiled window's edge (sway outer gap), whenever
-// sway/scripts/osd writes the state file, then fades out. Pushes the value
-// into the bar's shared state so the bar + quick menu update instantly.
+// OSD: flashes volume/brightness, fades out
 PanelWindow {
     id: osdWindow
     color: "transparent"
     aboveWindows: true
     exclusionMode: ExclusionMode.Ignore
-    // Pop up in the top-right corner (below the bar) when the bar sits on
-    // top or when the bar is full-width; bottom-right otherwise.
+    // top-right when bar is on top or full-width, bottom-right otherwise
     readonly property bool atTop: (root.barSide === "top" || root.barFullWidth)
     anchors {
         top: atTop
@@ -34,32 +30,29 @@ PanelWindow {
         id: osdStateFile
         path: Quickshell.env("HOME") + "/.cache/quickshell-osd.json"
         watchChanges: true
-        // onFileChanged only fires the watcher; reload() and read the fresh
-        // content in onTextChanged.
+        // reload on file change
         onFileChanged: osdStateFile.reload()
         onTextChanged: osdWindow.handleOsdState()
     }
 
-    // Same hard offset shadow as the bar (box-shadow: 8px 8px 0 #000).
+    // shadow (same as bar)
     RectangularShadow {
         anchors.fill: osdCard
         radius: 0
         color: "#000000"
         blur: 0
         spread: 0
-        offset: Qt.vector2d(8, 8)
+        offset: Qt.vector2d(8 * root.uiScale, 8 * root.uiScale)
         visible: root.osdShadow
     }
 
     Rectangle {
         id: osdCard
-        // Start hidden (QML defaults opacity to 1) so the card doesn't sit
-        // visible with stale text until the first real keybind.
+        // start hidden
         opacity: 0
         height: 46 * root.uiScale
         implicitHeight: 46
-        // Anchored 8px off the bottom so the shadow below has room; fills the
-        // window width so the right edge aligns with a tiled window's edge.
+        // 8px gap for shadow, aligns with tiled window edge
         anchors {
             left: parent.left
             right: parent.right
@@ -90,8 +83,7 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
             }
 
-            // Level track + fill, same styling as the quick menu volume
-            // slider: muted track, accent fill, rounded.
+            // level track + fill
             Rectangle {
                 id: osdTrack
                 width: 160 * root.uiScale
@@ -117,8 +109,7 @@ PanelWindow {
                 text: "50%"
                 font.family: root.fontFamily
                 font.pixelSize: 17 * root.uiScale
-                // Fixed width wide enough for "100%" so the card never resizes
-                // (and the number never shifts) as the digit count changes.
+                // fixed width for "100%"
                 width: 44 * root.uiScale
                 color: root.getColor("fg", "#f0dfd8")
                 anchors.verticalCenter: parent.verticalCenter
@@ -132,11 +123,13 @@ PanelWindow {
         onTriggered: osdCard.opacity = 0
     }
 
-    // Exposed so the notification popup can mirror this exact width.
+    // exposed for notification popup to mirror
     readonly property real cardWidth: osdCard.implicitWidth
     property real osdLevel: 0
-    // Skip the preload read at startup and any read identical to what we
-    // already handled (so bar restarts don't flash the OSD for stale values).
+    // Skip the first file read (preload) and duplicate reads to avoid
+    // showing stale OSD on startup. The trade-off is that a volume/brightness
+    // change happening exactly at startup is missed — acceptable since the
+    // user can see the new level in the bar immediately.
     property bool firstRead: true
     property string lastValue: ""
 
@@ -152,20 +145,22 @@ PanelWindow {
         osdWindow.lastValue = text
         try {
             var state = JSON.parse(text)
+            var parsedValue = parseInt(state.value, 10)
+            if (isNaN(parsedValue)) return
             if (state.type === "volume") {
-                osdIcon.text = state.state === "muted" ? "ﱝ" : ""
+                osdIcon.text = state.state === "muted" ? "ﱝ" : ""
                 root.isVolumeMuted = state.state === "muted"
-                root.volume = parseInt(state.value)
+                root.volume = parsedValue
             } else if (state.type === "brightness") {
                 osdIcon.text = "󰃠"
-                root.brightnessLevel = parseInt(state.value)
+                root.brightnessLevel = parsedValue
             } else {
                 return
             }
             osdValue.text = state.value + "%"
-            osdWindow.osdLevel = parseInt(state.value)
+            osdWindow.osdLevel = parsedValue
             osdCard.opacity = 1
             osdHideTimer.restart()
-        } catch (e) { /* ignore malformed state */ }
+        } catch (e) { console.warn("[osd] malformed state:", e.message) }
     }
 }

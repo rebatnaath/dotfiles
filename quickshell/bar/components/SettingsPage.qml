@@ -1,20 +1,20 @@
 import QtQuick
 import Quickshell.Io
 
-// Scrollable settings page: edit the rice-wide visual tokens. Edits the shell
-// root's reactive properties for instant feedback, then persists via
-// root.saveRiceSettings(). The container decides the height (see callers).
-Flickable {
+Item {
     id: settingsPage
     width: parent.width
+    height: parent.height
     clip: true
-    boundsBehavior: Flickable.StopAtBounds
-    contentWidth: width
-    contentHeight: contentColumn.height
+
+    property real contentY: 0
+    readonly property real maxContentY: Math.max(0, contentColumn.height - settingsPage.height)
+    onMaxContentYChanged: contentY = Math.min(contentY, maxContentY)
 
     Column {
         id: contentColumn
         width: settingsPage.width
+        y: -settingsPage.contentY
         spacing: 12 * root.uiScale
 
         Text {
@@ -25,8 +25,6 @@ Flickable {
             font.bold: true
             color: root.getColor("accent", "#ffb691")
         }
-
-        // ---- Sway window decorations -------------------------------------
 
         Text {
             width: parent.width
@@ -42,12 +40,8 @@ Flickable {
             maximumValue: 12
             valueUnit: "px"
             value: root.borderWidth
-            showHandle: false
-            onValuePreviewed: (newValue) => root.borderWidth = newValue
-            onValueCommitted: (newValue) => {
-                root.borderWidth = newValue
-                root.saveRiceSettings()
-            }
+            onValuePreviewed: (v) => root.borderWidth = v
+            onValueCommitted: (v) => { root.borderWidth = v; root.saveRiceSettings() }
         }
 
         SliderRow {
@@ -55,12 +49,8 @@ Flickable {
             maximumValue: 24
             valueUnit: "px"
             value: root.cornerRadius
-            showHandle: false
-            onValuePreviewed: (newValue) => root.cornerRadius = newValue
-            onValueCommitted: (newValue) => {
-                root.cornerRadius = newValue
-                root.saveRiceSettings()
-            }
+            onValuePreviewed: (v) => root.cornerRadius = v
+            onValueCommitted: (v) => { root.cornerRadius = v; root.saveRiceSettings() }
         }
 
         // ---- Effects -------------------------------------------------------
@@ -78,28 +68,18 @@ Flickable {
             labelText: "E-Ink Grain"
             minimumValue: 0
             maximumValue: 5
-            stepSize: 1
             valueUnit: ""
             value: root.noiseLevel
-            valueText: root.noiseLevel === 0 ? "off" : root.noiseLevel + ""
-            showHandle: true
-            onValuePreviewed: (newValue) => root.noiseLevel = newValue
-            onValueCommitted: (newValue) => root.setNoiseLevel(newValue)
+            onValueCommitted: (v) => root.setNoiseLevel(v)
         }
 
-                SliderRow {
-            labelText: "Night Light Intensity"
+        SliderRow {
+            labelText: "Night Light"
             minimumValue: 0
             maximumValue: 5
-            stepSize: 1
             valueUnit: ""
             value: root.nightLightIntensity
-            valueText: root.nightLightIntensity === 0 ? "off" : root.nightLightIntensity + ""
-            showHandle: true
-            onValuePreviewed: (v) => root.nightLightIntensity = v
-            onValueCommitted: (v) => {
-                root.setNightLightIntensity(v)
-            }
+            onValueCommitted: (v) => root.setNightLightIntensity(v)
         }
 
         // ---- Bar position -------------------------------------------------
@@ -190,131 +170,128 @@ Flickable {
             onChosen: (f) => root.saveRiceSettings()
         }
 
-        Text {
-            width: parent.width
         // ---- Panel settings ----------------------------------------------
 
         Column {
             id: panelSettings
             width: parent.width
-            spacing: 12
+            spacing: 12 * root.uiScale
 
-        // ---- Panel settings ----------------------------------------------
-
-        Text {
-            width: parent.width
-            text: "Panels"
-            font.family: root.fontFamily
-            font.pixelSize: 12 * root.uiScale
-            font.bold: true
-            color: root.getColor("fg", "#f0dfd8")
-        }
-
-        Text {
-            width: parent.width
-            text: "Bar"
-            font.family: root.fontFamily
-            font.pixelSize: 11 * root.uiScale
-            font.bold: true
-            color: root.getColor("muted", "#a08d85")
-        }
-
-        ToggleRow {
-            label: "Border"
-            sublabel: "accent outline on the bar"
-            checked: root.barBorder
-            onToggled: (c) => {
-                root.barBorder = c
-                root.saveRiceSettings()
+            Text {
+                width: parent.width
+                text: "Panels"
+                font.family: root.fontFamily
+                font.pixelSize: 12 * root.uiScale
+                font.bold: true
+                color: root.getColor("fg", "#f0dfd8")
             }
-        }
 
-        ToggleRow {
-            label: "Shadow"
-            sublabel: "offset shadow under the bar"
-            checked: root.barShadow
-            onToggled: (c) => {
-                root.barShadow = c
-                root.saveRiceSettings()
+            Text {
+                width: parent.width
+                text: "Bar"
+                font.family: root.fontFamily
+                font.pixelSize: 11 * root.uiScale
+                font.bold: true
+                color: root.getColor("muted", "#a08d85")
             }
-        }
 
-        ToggleRow {
-            label: "Full Width"
-            sublabel: "stretch the bar edge-to-edge"
-            checked: root.barFullWidth
-            onToggled: (c) => {
-                root.barFullWidth = c
-                root.saveRiceSettings()
+            ToggleRow {
+                label: "Border"
+                sublabel: "accent outline on the bar"
+                checked: root.barBorder
+                onToggled: (c) => {
+                    root.barBorder = c
+                    root.saveRiceSettings()
+                }
             }
-        }
 
-        ToggleRow {
-            label: "Night Light"
-            sublabel: "wlsunset warm filter over the screen"
-            checked: root.isNightLightEnabled
-            onToggled: (c) => {
-                root.toggleNightLight()
+            ToggleRow {
+                label: "Shadow"
+                sublabel: root.barFullWidth ? "disabled in fullwidth" : "offset shadow under the bar"
+                checked: root.barShadow
+                disabled: root.barFullWidth
+                onToggled: (c) => {
+                    root.barShadow = c
+                    root.saveRiceSettings()
+                }
             }
-        }
 
-        Text {
-            width: parent.width
-            text: "Quick Menu"
-            font.family: root.fontFamily
-            font.pixelSize: 11 * root.uiScale
-            font.bold: true
-            color: root.getColor("muted", "#a08d85")
-        }
-
-        ToggleRow {
-            label: "Border"
-            sublabel: "accent outline on the quick menu"
-            checked: root.quickMenuBorder
-            onToggled: (c) => {
-                root.quickMenuBorder = c
-                root.saveRiceSettings()
+            ToggleRow {
+                label: "Full Width"
+                sublabel: "stretch the bar edge-to-edge"
+                checked: root.barFullWidth
+                onToggled: (c) => {
+                    root.barFullWidth = c
+                    root.saveRiceSettings()
+                }
             }
-        }
 
-        ToggleRow {
-            label: "Shadow"
-            sublabel: "offset shadow on the quick menu"
-            checked: root.quickMenuShadow
-            onToggled: (c) => {
-                root.quickMenuShadow = c
-                root.saveRiceSettings()
+            ToggleRow {
+                label: "Night Light"
+                sublabel: "wlsunset warm filter over the screen"
+                checked: root.isNightLightEnabled
+                onToggled: (c) => {
+                    root.toggleNightLight()
+                }
             }
-        }
 
-        Text {
-            width: parent.width
-            text: "OSD"
-            font.family: root.fontFamily
-            font.pixelSize: 11 * root.uiScale
-            font.bold: true
-            color: root.getColor("muted", "#a08d85")
-        }
-
-        ToggleRow {
-            label: "Border"
-            sublabel: "accent outline on the OSD"
-            checked: root.osdBorder
-            onToggled: (c) => {
-                root.osdBorder = c
-                root.saveRiceSettings()
+            Text {
+                width: parent.width
+                text: "Quick Menu"
+                font.family: root.fontFamily
+                font.pixelSize: 11 * root.uiScale
+                font.bold: true
+                color: root.getColor("muted", "#a08d85")
             }
-        }
 
-        ToggleRow {
-            label: "Shadow"
-            sublabel: "offset shadow on the OSD"
-            checked: root.osdShadow
-            onToggled: (c) => {
-                root.osdShadow = c
-                root.saveRiceSettings()
+            ToggleRow {
+                label: "Border"
+                sublabel: "accent outline on the quick menu"
+                checked: root.quickMenuBorder
+                onToggled: (c) => {
+                    root.quickMenuBorder = c
+                    root.saveRiceSettings()
+                }
             }
-        }
+
+            ToggleRow {
+                label: "Shadow"
+                sublabel: "offset shadow on the quick menu"
+                checked: root.quickMenuShadow
+                onToggled: (c) => {
+                    root.quickMenuShadow = c
+                    root.saveRiceSettings()
+                }
+            }
+
+            Text {
+                width: parent.width
+                text: "OSD"
+                font.family: root.fontFamily
+                font.pixelSize: 11 * root.uiScale
+                font.bold: true
+                color: root.getColor("muted", "#a08d85")
+            }
+
+            ToggleRow {
+                label: "Border"
+                sublabel: "accent outline on the OSD"
+                checked: root.osdBorder
+                onToggled: (c) => {
+                    root.osdBorder = c
+                    root.saveRiceSettings()
+                }
+            }
+
+            ToggleRow {
+                label: "Shadow"
+                sublabel: "offset shadow on the OSD"
+                checked: root.osdShadow
+                onToggled: (c) => {
+                    root.osdShadow = c
+                    root.saveRiceSettings()
+                }
+            }
         }
     }
 }

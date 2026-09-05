@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Print bluetooth state as "off", "on", or "on:<connected device name>".
+export PATH="/run/current-system/sw/bin:/etc/profiles/per-user/oryza/bin:$PATH"
 set -uo pipefail
 
 powered=$(timeout 3 bluetoothctl show 2>/dev/null | awk '/Powered:/{print $2}')

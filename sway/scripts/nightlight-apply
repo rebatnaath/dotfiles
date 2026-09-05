@@ -5,6 +5,7 @@
 # and the wallpaper isn't re-rendered.
 #
 # Usage: nightlight-apply [on|off] [intensityPct]
+export PATH="/run/current-system/sw/bin:/etc/profiles/per-user/oryza/bin:$PATH"
 set -uo pipefail
 
 MODE="${1:-on}"

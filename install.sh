@@ -5,7 +5,8 @@ DOTFILES="$HOME/dotfiles"
 BACKUP="$HOME/.config-backup/$(date +%Y%m%d-%H%M%S)"
 CONFIGS=(sway quickshell kitty rofi nvim fastfetch)
 
-echo "Backing up existing configs and symlinking new ones..."
+echo "WARNING: This will overwrite your existing configs for:"
+echo "  ${CONFIGS[*]}"
 echo ""
 
 # Backup existing configs
@@ -14,9 +15,15 @@ for c in "${CONFIGS[@]}"; do
     [ -d "$HOME/.config/$c" ] && [ ! -L "$HOME/.config/$c" ] && cp -r "$HOME/.config/$c" "$BACKUP/$c" && echo "Backed up: $c"
 done
 
-# Symlink new configs
+echo ""
+
+# Copy new configs (overwrites existing)
 for c in "${CONFIGS[@]}"; do
-    [ -d "$DOTFILES/$c" ] && rm -rf "$HOME/.config/$c" && ln -sf "$DOTFILES/$c" "$HOME/.config/$c" && echo "Installed: $c"
+    if [ -d "$DOTFILES/$c" ]; then
+        rm -rf "$HOME/.config/$c"
+        cp -r "$DOTFILES/$c" "$HOME/.config/$c"
+        echo "Installed: $c"
+    fi
 done
 
 echo ""

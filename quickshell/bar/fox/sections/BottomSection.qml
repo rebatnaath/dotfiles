@@ -21,7 +21,7 @@ Row {
             onClicked: root.isQuickMenuOpen = !root.isQuickMenuOpen
             onWheel: (event) => {
                 if (event.angleDelta.y !== 0 || event.pixelDelta.y !== 0) {
-                    root.wheelAccum += event.angleDelta.y
+                    root.wheelAccum = Math.max(-600, Math.min(600, root.wheelAccum + event.angleDelta.y))
                     volumeCommitTimer.restart()
                 }
                 event.accepted = true

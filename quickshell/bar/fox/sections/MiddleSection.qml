@@ -8,10 +8,11 @@ Row {
     Rectangle {
         id: clockBox
         height: 36
-        width: 58
+        width: clockRow.implicitWidth + 12
         color: "transparent"
 
         Row {
+            id: clockRow
             anchors.centerIn: parent
             spacing: 4
 
